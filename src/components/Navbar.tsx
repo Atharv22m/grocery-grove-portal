@@ -1,6 +1,7 @@
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,22 +11,22 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <a href="/" className="text-2xl font-bold text-primary">
+            <Link to="/" className="text-2xl font-bold text-primary">
               Grocery Store
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="/" className="text-gray-700 hover:text-primary transition-colors">
+            <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
               Home
-            </a>
-            <a href="/categories" className="text-gray-700 hover:text-primary transition-colors">
+            </Link>
+            <Link to="/categories" className="text-gray-700 hover:text-primary transition-colors">
               Categories
-            </a>
-            <a href="/login" className="text-gray-700 hover:text-primary transition-colors">
+            </Link>
+            <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
               Login
-            </a>
+            </Link>
             <Button className="bg-primary hover:bg-primary-hover text-white">
               <ShoppingCart className="mr-2 h-4 w-4" />
               Cart
@@ -47,15 +48,15 @@ export const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden pb-4 animate-fade-in">
             <div className="flex flex-col space-y-4">
-              <a href="/" className="text-gray-700 hover:text-primary transition-colors">
+              <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
                 Home
-              </a>
-              <a href="/categories" className="text-gray-700 hover:text-primary transition-colors">
+              </Link>
+              <Link to="/categories" className="text-gray-700 hover:text-primary transition-colors">
                 Categories
-              </a>
-              <a href="/login" className="text-gray-700 hover:text-primary transition-colors">
+              </Link>
+              <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
                 Login
-              </a>
+              </Link>
               <Button className="bg-primary hover:bg-primary-hover text-white">
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Cart
