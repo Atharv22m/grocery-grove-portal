@@ -1,38 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 const products = [
   {
-    id: 1,
+    id: "1",
     name: "Organic Bananas",
-    price: "₹99",
+    price: 99,
     unit: "bunch",
     image: "🍌",
   },
   {
-    id: 2,
+    id: "2",
     name: "Fresh Milk",
-    price: "₹79",
+    price: 79,
     unit: "1L",
     image: "🥛",
   },
   {
-    id: 3,
+    id: "3",
     name: "Whole Wheat Bread",
-    price: "₹59",
+    price: 59,
     unit: "loaf",
     image: "🍞",
   },
   {
-    id: 4,
+    id: "4",
     name: "Farm Eggs",
-    price: "₹119",
+    price: 119,
     unit: "dozen",
     image: "🥚",
   },
 ];
 
 export const FeaturedProducts = () => {
+  const { addToCart, isLoading } = useCart();
+
   return (
     <section className="py-16 bg-secondary">
       <div className="container mx-auto px-4">
@@ -46,10 +49,14 @@ export const FeaturedProducts = () => {
               <div className="text-6xl mb-4 flex justify-center">{product.image}</div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
               <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-bold text-primary">{product.price}</span>
+                <span className="text-lg font-bold text-primary">₹{product.price}</span>
                 <span className="text-sm text-gray-500">per {product.unit}</span>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary-hover">
+              <Button 
+                className="w-full bg-primary hover:bg-primary-hover"
+                onClick={() => addToCart(product.id)}
+                disabled={isLoading}
+              >
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Add to Cart
               </Button>

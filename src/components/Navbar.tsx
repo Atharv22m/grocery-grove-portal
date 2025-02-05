@@ -2,9 +2,13 @@ import React, { useState } from "react";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { cartItems } = useCart();
+
+  const cartItemCount = cartItems.length;
 
   return (
     <nav className="bg-white shadow-sm fixed w-full z-50">
@@ -27,9 +31,14 @@ export const Navbar: React.FC = () => {
             <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
               Login
             </Link>
-            <Button className="bg-primary hover:bg-primary-hover text-white">
+            <Button className="bg-primary hover:bg-primary-hover text-white relative">
               <ShoppingCart className="mr-2 h-4 w-4" />
               Cart
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
             </Button>
           </div>
 
@@ -57,9 +66,14 @@ export const Navbar: React.FC = () => {
               <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
                 Login
               </Link>
-              <Button className="bg-primary hover:bg-primary-hover text-white">
+              <Button className="bg-primary hover:bg-primary-hover text-white relative">
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Cart
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
               </Button>
             </div>
           </div>
