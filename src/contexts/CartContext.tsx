@@ -51,7 +51,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         .eq("user_id", user.id);
 
       if (error) throw error;
-      setCartItems(data || []);
+
+      // Map the Supabase response to match our CartItem type
+      const mappedCartItems: CartItem[] = (data || []).map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        product: {
+          name: item.products.name,
+          price: item.products.price,
+          image: item.products.image_url || '🛒' // Fallback emoji if no image
+        }
+      }));
+
+      setCartItems(mappedCartItems);
     } catch (error: any) {
       console.error("Error fetching cart items:", error);
       toast.error("Failed to fetch cart items");
