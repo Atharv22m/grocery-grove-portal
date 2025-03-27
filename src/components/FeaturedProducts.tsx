@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -5,31 +6,59 @@ import { useCart } from "@/contexts/CartContext";
 const products = [
   {
     id: "1",
-    name: "Organic Bananas",
-    price: 99,
-    unit: "bunch",
-    image: "🍌",
+    name: "Fortune Sunlite Refined Sunflower Oil",
+    price: 199,
+    unit: "1L",
+    image: "🌻",
   },
   {
     id: "2",
-    name: "Fresh Milk",
-    price: 79,
-    unit: "1L",
-    image: "🥛",
+    name: "Tata Salt",
+    price: 25,
+    unit: "1kg",
+    image: "🧂",
   },
   {
     id: "3",
-    name: "Whole Wheat Bread",
-    price: 59,
-    unit: "loaf",
-    image: "🍞",
+    name: "Aashirvaad Atta with Multigrains",
+    price: 325,
+    unit: "5kg",
+    image: "🌾",
   },
   {
     id: "4",
-    name: "Farm Eggs",
-    price: 119,
-    unit: "dozen",
-    image: "🥚",
+    name: "Saffola Active Refined Oil",
+    price: 215,
+    unit: "1L",
+    image: "🍳",
+  },
+  {
+    id: "5",
+    name: "Maggi 2-Minute Noodles",
+    price: 72,
+    unit: "pack of 6",
+    image: "🍜",
+  },
+  {
+    id: "6",
+    name: "Daawat Basmati Rice - Premium",
+    price: 299,
+    unit: "1kg",
+    image: "🍚",
+  },
+  {
+    id: "7",
+    name: "Bournvita Health Drink",
+    price: 245,
+    unit: "500g",
+    image: "🥛",
+  },
+  {
+    id: "8",
+    name: "Red Label Tea",
+    price: 170,
+    unit: "500g",
+    image: "🍵",
   },
 ];
 
