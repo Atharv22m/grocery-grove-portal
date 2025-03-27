@@ -26,8 +26,8 @@ export const Navbar: React.FC = () => {
             <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
               Home
             </Link>
-            <Link to="/categories" className="text-gray-700 hover:text-primary transition-colors">
-              Categories
+            <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
+              Products
             </Link>
             <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
               Login
@@ -63,8 +63,8 @@ export const Navbar: React.FC = () => {
               <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
                 Home
               </Link>
-              <Link to="/categories" className="text-gray-700 hover:text-primary transition-colors">
-                Categories
+              <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
+                Products
               </Link>
               <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
                 Login
