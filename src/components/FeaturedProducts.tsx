@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const products = [
   {
@@ -64,7 +66,21 @@ export const products = [
 ];
 
 export const FeaturedProducts = () => {
-  const { addToCart, isLoading } = useCart();
+  const { addToCart } = useCart();
+  const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
+
+  const handleAddToCart = async (productId: string) => {
+    try {
+      setLoadingProductId(productId);
+      await addToCart(productId);
+      toast.success("Item added to cart");
+    } catch (error) {
+      console.error("Failed to add item to cart:", error);
+      toast.error("Failed to add item to cart");
+    } finally {
+      setLoadingProductId(null);
+    }
+  };
 
   return (
     <section className="py-16 bg-secondary">
@@ -92,11 +108,11 @@ export const FeaturedProducts = () => {
               </Link>
               <Button 
                 className="w-full bg-primary hover:bg-primary-hover"
-                onClick={() => addToCart(product.id)}
-                disabled={isLoading}
+                onClick={() => handleAddToCart(product.id)}
+                disabled={loadingProductId === product.id}
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to Cart
+                {loadingProductId === product.id ? "Adding..." : "Add to Cart"}
               </Button>
             </div>
           ))}
