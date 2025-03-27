@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { Link } from "react-router-dom";
 
-const products = [
+export const products = [
   {
     id: "1",
     name: "Fortune Sunlite Refined Sunflower Oil",
@@ -75,18 +76,20 @@ export const FeaturedProducts = () => {
               key={product.id}
               className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow animate-fade-in"
             >
-              <div className="mb-4 flex justify-center h-40">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="object-contain h-full w-full rounded-md"
-                />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-bold text-primary">₹{product.price}</span>
-                <span className="text-sm text-gray-500">per {product.unit}</span>
-              </div>
+              <Link to={`/product/${product.id}`} className="block mb-4">
+                <div className="mb-4 flex justify-center h-40">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="object-contain h-full w-full rounded-md"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-lg font-bold text-primary">₹{product.price}</span>
+                  <span className="text-sm text-gray-500">per {product.unit}</span>
+                </div>
+              </Link>
               <Button 
                 className="w-full bg-primary hover:bg-primary-hover"
                 onClick={() => addToCart(product.id)}

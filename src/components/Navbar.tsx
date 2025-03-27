@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,15 +32,17 @@ export const Navbar: React.FC = () => {
             <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
               Login
             </Link>
-            <Button className="bg-primary hover:bg-primary-hover text-white relative">
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Cart
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartItemCount}
-                </span>
-              )}
-            </Button>
+            <Link to="/cart">
+              <Button className="bg-primary hover:bg-primary-hover text-white relative">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Cart
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -66,15 +69,17 @@ export const Navbar: React.FC = () => {
               <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
                 Login
               </Link>
-              <Button className="bg-primary hover:bg-primary-hover text-white relative">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Cart
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Button>
+              <Link to="/cart">
+                <Button className="bg-primary hover:bg-primary-hover text-white relative">
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Cart
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
             </div>
           </div>
         )}
