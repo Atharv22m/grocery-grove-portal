@@ -9,56 +9,56 @@ const products = [
     name: "Fortune Sunlite Refined Sunflower Oil",
     price: 199,
     unit: "1L",
-    image: "🌻",
+    image: "https://images.unsplash.com/photo-1620705043135-7524af6ee7c2?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "2",
     name: "Tata Salt",
     price: 25,
     unit: "1kg",
-    image: "🧂",
+    image: "https://images.unsplash.com/photo-1578240599704-d29dde6b7e61?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "3",
     name: "Aashirvaad Atta with Multigrains",
     price: 325,
     unit: "5kg",
-    image: "🌾",
+    image: "https://images.unsplash.com/photo-1586444248879-bc604bc77e3b?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "4",
     name: "Saffola Active Refined Oil",
     price: 215,
     unit: "1L",
-    image: "🍳",
+    image: "https://images.unsplash.com/photo-1567346245492-5c8319207055?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "5",
     name: "Maggi 2-Minute Noodles",
     price: 72,
     unit: "pack of 6",
-    image: "🍜",
+    image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "6",
     name: "Daawat Basmati Rice - Premium",
     price: 299,
     unit: "1kg",
-    image: "🍚",
+    image: "https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "7",
     name: "Bournvita Health Drink",
     price: 245,
     unit: "500g",
-    image: "🥛",
+    image: "https://images.unsplash.com/photo-1605548109944-9040d0f88644?auto=format&fit=crop&q=80&w=300&h=300",
   },
   {
     id: "8",
     name: "Red Label Tea",
     price: 170,
     unit: "500g",
-    image: "🍵",
+    image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=300&h=300",
   },
 ];
 
@@ -75,7 +75,13 @@ export const FeaturedProducts = () => {
               key={product.id}
               className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow animate-fade-in"
             >
-              <div className="text-6xl mb-4 flex justify-center">{product.image}</div>
+              <div className="mb-4 flex justify-center h-40">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="object-contain h-full w-full rounded-md"
+                />
+              </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-bold text-primary">₹{product.price}</span>
