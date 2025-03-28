@@ -1,8 +1,10 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type UserType = "customer" | "seller";
 
@@ -10,12 +12,41 @@ export const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [userType, setUserType] = useState<UserType>("customer");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     phoneNumber: "",
     email: "",
     password: "",
   });
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setUser(data.user);
+      }
+    };
+    
+    checkUser();
+    
+    // Setup auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          setUser(session.user);
+          navigate("/");
+        } else if (event === "SIGNED_OUT") {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +61,10 @@ export const AuthForm = () => {
 
         if (error) throw error;
         toast.success("Logged in successfully!");
+        navigate("/");
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        // Register new user
+        const { data: userData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -46,19 +79,22 @@ export const AuthForm = () => {
         if (signUpError) throw signUpError;
 
         // Create profile after successful signup
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert([
-            {
-              id: (await supabase.auth.getUser()).data.user?.id,
-              full_name: formData.fullName,
-              phone_number: formData.phoneNumber,
-            },
-          ]);
+        if (userData.user) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: userData.user.id,
+                full_name: formData.fullName,
+                phone_number: formData.phoneNumber,
+              },
+            ]);
 
-        if (profileError) throw profileError;
+          if (profileError) throw profileError;
+        }
 
         toast.success("Account created successfully! Please check your email to verify your account.");
+        // Don't navigate away if email confirmation is required
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -66,6 +102,42 @@ export const AuthForm = () => {
       setLoading(false);
     }
   };
+
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("Logged out successfully");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // If user is already logged in, show profile info
+  if (user) {
+    return (
+      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md animate-fade-in">
+        <h2 className="text-2xl font-bold text-center mb-6">Your Account</h2>
+        
+        <div className="mb-6 p-4 bg-gray-50 rounded-md">
+          <p className="text-gray-600">Logged in as:</p>
+          <p className="font-semibold">{user.email}</p>
+        </div>
+        
+        <Button 
+          onClick={handleLogout} 
+          className="w-full" 
+          variant="outline"
+          disabled={loading}
+        >
+          {loading ? "Processing..." : "Logout"}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md animate-fade-in">
@@ -147,7 +219,7 @@ export const AuthForm = () => {
           disabled={loading}
         >
           {loading
-            ? "Loading..."
+            ? "Processing..."
             : isLogin
             ? "Login"
             : "Create Account"}

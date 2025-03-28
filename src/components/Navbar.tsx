@@ -1,13 +1,34 @@
 
-import React, { useState } from "react";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ShoppingCart, Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    fetchUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const cartItemCount = cartItems.length;
 
@@ -30,7 +51,14 @@ export const Navbar: React.FC = () => {
               Products
             </Link>
             <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
-              Login
+              {user ? (
+                <div className="flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  Account
+                </div>
+              ) : (
+                "Login"
+              )}
             </Link>
             <Link to="/cart">
               <Button className="bg-primary hover:bg-primary-hover text-white relative">
@@ -67,7 +95,7 @@ export const Navbar: React.FC = () => {
                 Products
               </Link>
               <Link to="/auth" className="text-gray-700 hover:text-primary transition-colors">
-                Login
+                {user ? "Account" : "Login"}
               </Link>
               <Link to="/cart">
                 <Button className="bg-primary hover:bg-primary-hover text-white relative">

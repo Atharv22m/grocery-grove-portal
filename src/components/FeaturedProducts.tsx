@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -12,56 +11,56 @@ export const products = [
     name: "Fortune Sunlite Refined Sunflower Oil",
     price: 199,
     unit: "1L",
-    image: "https://images.unsplash.com/photo-1620705043135-7524af6ee7c2?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://m.media-amazon.com/images/I/61ePj7iSMHL._AC_UF1000,1000_QL80_.jpg",
   },
   {
     id: "2",
     name: "Tata Salt",
     price: 25,
     unit: "1kg",
-    image: "https://images.unsplash.com/photo-1578240599704-d29dde6b7e61?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://www.bigbasket.com/media/uploads/p/l/241600_7-tata-salt-iodized.jpg",
   },
   {
     id: "3",
     name: "Aashirvaad Atta with Multigrains",
     price: 325,
     unit: "5kg",
-    image: "https://images.unsplash.com/photo-1586444248879-bc604bc77e3b?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://www.jiomart.com/images/product/original/490001304/aashirvaad-multigrain-atta-5-kg-product-images-o490001304-p490001304-0-202203150432.jpg",
   },
   {
     id: "4",
     name: "Saffola Active Refined Oil",
     price: 215,
     unit: "1L",
-    image: "https://images.unsplash.com/photo-1567346245492-5c8319207055?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://m.media-amazon.com/images/I/715XLxtIZ1L._AC_UF1000,1000_QL80_.jpg",
   },
   {
     id: "5",
     name: "Maggi 2-Minute Noodles",
     price: 72,
     unit: "pack of 6",
-    image: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://m.media-amazon.com/images/I/61aycR8ipeL._AC_UF1000,1000_QL80_.jpg",
   },
   {
     id: "6",
     name: "Daawat Basmati Rice - Premium",
     price: 299,
     unit: "1kg",
-    image: "https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://m.media-amazon.com/images/I/71vt0pn+1FL._AC_UF1000,1000_QL80_.jpg",
   },
   {
     id: "7",
     name: "Bournvita Health Drink",
     price: 245,
     unit: "500g",
-    image: "https://images.unsplash.com/photo-1605548109944-9040d0f88644?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://m.media-amazon.com/images/I/61A+2IW8cuL._AC_UF1000,1000_QL80_.jpg",
   },
   {
     id: "8",
     name: "Red Label Tea",
     price: 170,
     unit: "500g",
-    image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&q=80&w=300&h=300",
+    image: "https://www.jiomart.com/images/product/original/491293460/red-label-tea-1-kg-product-images-o491293460-p491293460-0-202211071515.jpg",
   },
 ];
 
