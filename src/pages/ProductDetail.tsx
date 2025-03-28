@@ -5,7 +5,7 @@ import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, ArrowLeft, Star } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Star, ImageOff } from "lucide-react";
 import { products } from "@/components/FeaturedProducts";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     // In a real app, we would fetch the product from the API
@@ -23,6 +24,7 @@ export default function ProductDetail() {
     const foundProduct = products.find(p => p.id === id);
     setProduct(foundProduct);
     setLoading(false);
+    setImageError(false); // Reset image error state when product changes
   }, [id]);
 
   const handleAddToCart = () => {
@@ -66,12 +68,20 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <Card>
-            <CardContent className="p-6 flex justify-center">
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="max-h-80 object-contain"
-              />
+            <CardContent className="p-6 flex justify-center items-center min-h-[300px]">
+              {imageError ? (
+                <div className="flex flex-col items-center text-gray-400">
+                  <ImageOff size={64} />
+                  <p className="mt-4">Image not available</p>
+                </div>
+              ) : (
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="max-h-80 object-contain"
+                  onError={() => setImageError(true)}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
@@ -101,7 +111,6 @@ export default function ProductDetail() {
           <div className="mb-6">
             <h2 className="font-semibold mb-2">Description</h2>
             <p className="text-gray-600">
-              {/* Placeholder description since we don't have real descriptions in our data */}
               Premium quality {product.name.toLowerCase()} for your daily needs. 
               Our products are sourced directly from farmers to ensure freshness and quality.
             </p>
