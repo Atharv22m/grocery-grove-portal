@@ -1,13 +1,14 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { products } from "@/components/FeaturedProducts";
 
 // Updated categories based on actual products
 export const categories = [
-  { name: "Cooking Oils", image: "🫒", color: "bg-yellow-100", filter: (p: any) => p.name.toLowerCase().includes("oil") },
-  { name: "Spices & Seasonings", image: "🧂", color: "bg-red-100", filter: (p: any) => p.name.toLowerCase().includes("salt") },
+  { name: "Cooking Oils", image: "🫒", color: "bg-yellow-100", filter: (p: any) => p.name.toLowerCase().includes("oil") || p.name.toLowerCase().includes("refined") },
+  { name: "Spices & Seasonings", image: "🧂", color: "bg-red-100", filter: (p: any) => p.name.toLowerCase().includes("salt") || p.name.toLowerCase().includes("spice") },
   { name: "Grains & Flours", image: "🌾", color: "bg-amber-100", filter: (p: any) => p.name.toLowerCase().includes("atta") || p.name.toLowerCase().includes("rice") },
-  { name: "Instant Foods", image: "🍜", color: "bg-orange-100", filter: (p: any) => p.name.toLowerCase().includes("maggi") || p.name.toLowerCase().includes("noodles") },
+  { name: "Instant Foods", image: "🍜", color: "bg-orange-100", filter: (p: any) => p.name.toLowerCase().includes("maggi") || p.name.toLowerCase().includes("noodle") },
   { name: "Beverages", image: "☕", color: "bg-green-100", filter: (p: any) => p.name.toLowerCase().includes("tea") || p.name.toLowerCase().includes("bournvita") || p.name.toLowerCase().includes("drink") },
   { name: "All Products", image: "🛒", color: "bg-blue-100", filter: (p: any) => true },
 ];

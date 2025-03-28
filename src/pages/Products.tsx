@@ -79,7 +79,7 @@ export default function Products() {
               key={product.id}
               className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
             >
-              <a href={`/product/${product.id}`} className="block mb-4">
+              <Link to={`/product/${product.id}`} className="block mb-4">
                 <div className="mb-4 flex justify-center h-40">
                   <img 
                     src={product.image} 
@@ -92,7 +92,7 @@ export default function Products() {
                   <span className="text-lg font-bold text-primary">₹{product.price}</span>
                   <span className="text-sm text-gray-500">per {product.unit}</span>
                 </div>
-              </a>
+              </Link>
               <Button 
                 className="w-full bg-primary hover:bg-primary-hover"
                 onClick={() => handleAddToCart(product.id)}

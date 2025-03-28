@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -11,14 +12,14 @@ export const products = [
     name: "Fortune Sunlite Refined Sunflower Oil",
     price: 199,
     unit: "1L",
-    image: "https://m.media-amazon.com/images/I/61ePj7iSMHL._AC_UF1000,1000_QL80_.jpg",
+    image: "https://www.jiomart.com/images/product/original/490000086/fortune-sunlite-refined-sunflower-oil-1-l-product-images-o490000086-p490000086-0-202203150432.jpg",
   },
   {
     id: "2",
     name: "Tata Salt",
     price: 25,
     unit: "1kg",
-    image: "https://www.bigbasket.com/media/uploads/p/l/241600_7-tata-salt-iodized.jpg",
+    image: "https://www.jiomart.com/images/product/original/490001795/tata-salt-1-kg-product-images-o490001795-p490001795-0-202203171104.jpg",
   },
   {
     id: "3",
@@ -32,28 +33,28 @@ export const products = [
     name: "Saffola Active Refined Oil",
     price: 215,
     unit: "1L",
-    image: "https://m.media-amazon.com/images/I/715XLxtIZ1L._AC_UF1000,1000_QL80_.jpg",
+    image: "https://www.jiomart.com/images/product/original/490008739/saffola-active-blended-oil-1-l-product-images-o490008739-p490008739-0-202203150621.jpg",
   },
   {
     id: "5",
     name: "Maggi 2-Minute Noodles",
     price: 72,
     unit: "pack of 6",
-    image: "https://m.media-amazon.com/images/I/61aycR8ipeL._AC_UF1000,1000_QL80_.jpg",
+    image: "https://www.jiomart.com/images/product/original/490000363/maggi-2-minute-masala-instant-noodles-70-g-product-images-o490000363-p490000363-0-202305292130.jpg",
   },
   {
     id: "6",
     name: "Daawat Basmati Rice - Premium",
     price: 299,
     unit: "1kg",
-    image: "https://m.media-amazon.com/images/I/71vt0pn+1FL._AC_UF1000,1000_QL80_.jpg",
+    image: "https://www.jiomart.com/images/product/original/490001508/daawat-rozana-super-basmati-rice-1-kg-product-images-o490001508-p490001508-0-202203151144.jpg",
   },
   {
     id: "7",
     name: "Bournvita Health Drink",
     price: 245,
     unit: "500g",
-    image: "https://m.media-amazon.com/images/I/61A+2IW8cuL._AC_UF1000,1000_QL80_.jpg",
+    image: "https://www.jiomart.com/images/product/original/490594862/cadbury-bournvita-health-drink-jar-500-g-product-images-o490594862-p490594862-0-202204291245.jpg",
   },
   {
     id: "8",
