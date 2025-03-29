@@ -1,23 +1,38 @@
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ImageOff } from "lucide-react";
+import { ShoppingCart, ImageOff, Search } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { products } from "@/components/FeaturedProducts";
 import { toast } from "sonner";
 import { categories } from "@/components/Categories";
+import { Input } from "@/components/ui/input";
 
 export default function Products() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
+  const searchParam = searchParams.get("search");
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [activeCategory, setActiveCategory] = useState("All Products");
   const { addToCart } = useCart();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState(searchParam || "");
 
   useEffect(() => {
+    let result = [...products];
+    
+    // Apply search filter if it exists
+    if (searchParam) {
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(searchParam.toLowerCase())
+      );
+      setSearchQuery(searchParam);
+    }
+    
+    // Apply category filter if it exists
     if (categoryParam) {
       setActiveCategory(categoryParam);
       
@@ -25,22 +40,21 @@ export default function Products() {
       const selectedCategory = categories.find(cat => cat.name === categoryParam);
       
       if (selectedCategory) {
-        setFilteredProducts(products.filter(selectedCategory.filter));
-      } else {
-        setFilteredProducts(products);
+        result = result.filter(selectedCategory.filter);
       }
     } else {
       setActiveCategory("All Products");
-      setFilteredProducts(products);
     }
-  }, [categoryParam]);
+    
+    setFilteredProducts(result);
+  }, [categoryParam, searchParam]);
 
   const handleAddToCart = async (productId: string) => {
     try {
       setLoadingProductId(productId);
       await addToCart(productId);
       toast.success("Item added to cart");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add item to cart:", error);
       toast.error("Failed to add item to cart");
     } finally {
@@ -55,14 +69,58 @@ export default function Products() {
     }));
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Update the URL parameters
+    const newParams = new URLSearchParams(searchParams);
+    if (searchQuery) {
+      newParams.set("search", searchQuery);
+    } else {
+      newParams.delete("search");
+    }
+    setSearchParams(newParams);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       <div className="container mx-auto px-4 pt-24 pb-12">
         <h1 className="text-3xl font-bold mb-6">Products</h1>
         
+        {/* Search bar */}
+        <form onSubmit={handleSearch} className="mb-6 flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+          </div>
+          <Button type="submit" className="bg-primary hover:bg-primary-hover">
+            Search
+          </Button>
+        </form>
+        
         {/* Category filter buttons */}
         <div className="flex flex-wrap gap-2 mb-8">
+          <Button 
+            variant={activeCategory === "All Products" ? "default" : "outline"}
+            className={`${activeCategory === "All Products" ? "bg-primary" : ""}`}
+            onClick={() => {
+              setActiveCategory("All Products");
+              const newParams = new URLSearchParams(searchParams);
+              newParams.delete("category");
+              if (searchQuery) newParams.set("search", searchQuery);
+              setSearchParams(newParams);
+            }}
+          >
+            All Products
+          </Button>
+          
           {categories.map(category => (
             <Button 
               key={category.name}
@@ -70,7 +128,10 @@ export default function Products() {
               className={`${activeCategory === category.name ? "bg-primary" : ""}`}
               onClick={() => {
                 setActiveCategory(category.name);
-                setFilteredProducts(products.filter(category.filter));
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set("category", category.name);
+                if (searchQuery) newParams.set("search", searchQuery);
+                setSearchParams(newParams);
               }}
             >
               <span className="mr-2">{category.image}</span>
@@ -122,7 +183,21 @@ export default function Products() {
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No products found in this category.</p>
+            <p className="text-gray-500">No products found.</p>
+            {searchParam && (
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete("search");
+                  setSearchParams(newParams);
+                  setSearchQuery("");
+                }}
+              >
+                Clear search
+              </Button>
+            )}
           </div>
         )}
       </div>

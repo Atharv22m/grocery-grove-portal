@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ImageOff } from "lucide-react";
+import { ShoppingCart, ImageOff, ArrowUp, ArrowDown } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -69,6 +69,8 @@ export const FeaturedProducts = () => {
   const { addToCart } = useCart();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [displayedProducts, setDisplayedProducts] = useState([...products]);
 
   const handleAddToCart = async (productId: string) => {
     try {
@@ -90,12 +92,42 @@ export const FeaturedProducts = () => {
     }));
   };
 
+  const handleSort = (order: 'asc' | 'desc') => {
+    setSortOrder(order);
+    const sorted = [...products].sort((a, b) => {
+      return order === 'asc' ? a.price - b.price : b.price - a.price;
+    });
+    setDisplayedProducts(sorted);
+  };
+
   return (
     <section className="py-16 bg-secondary">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Featured Products</h2>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Sort by price:</span>
+            <Button 
+              variant={sortOrder === 'asc' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => handleSort('asc')}
+              className={sortOrder === 'asc' ? 'bg-primary' : ''}
+            >
+              <ArrowUp className="h-4 w-4 mr-1" /> Low to High
+            </Button>
+            <Button 
+              variant={sortOrder === 'desc' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => handleSort('desc')}
+              className={sortOrder === 'desc' ? 'bg-primary' : ''}
+            >
+              <ArrowDown className="h-4 w-4 mr-1" /> High to Low
+            </Button>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {displayedProducts.map((product) => (
             <div
               key={product.id}
               className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow animate-fade-in"
@@ -132,6 +164,13 @@ export const FeaturedProducts = () => {
               </Button>
             </div>
           ))}
+        </div>
+        <div className="mt-8 text-center">
+          <Link to="/products">
+            <Button className="bg-primary hover:bg-primary-hover">
+              View All Products
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

@@ -1,325 +1,374 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Navbar } from "@/components/Navbar";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const deliverySchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  state: z.string().min(2, "State must be at least 2 characters"),
+  zipCode: z.string().min(6, "ZIP code must be at least 6 characters"),
+});
+
+type DeliveryFormValues = z.infer<typeof deliverySchema>;
 
 export default function Checkout() {
-  const { cartItems, isLoading } = useCart();
+  const { cartItems } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    paymentMethod: "cod"
-  });
-  const [processing, setProcessing] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("delivery");
 
-  const calculateTotal = () => {
-    const subtotal = cartItems.reduce((total, item) => {
+  const form = useForm<DeliveryFormValues>({
+    resolver: zodResolver(deliverySchema),
+    defaultValues: {
+      fullName: "",
+      phoneNumber: "",
+      address: "",
+      city: "",
+      state: "Karnataka",
+      zipCode: "",
+    },
+  });
+
+  useEffect(() => {
+    // Redirect to cart if cart is empty
+    if (cartItems.length === 0) {
+      navigate("/cart");
+    }
+    
+    // Fetch user profile if logged in
+    const fetchUserProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+            
+          if (profile) {
+            setUserProfile(profile);
+            form.setValue("fullName", profile.full_name || "");
+            form.setValue("phoneNumber", profile.phone_number || "");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [navigate, cartItems]);
+
+  const calculateSubtotal = () => {
+    return cartItems.reduce((total, item) => {
       return total + (item.product.price * item.quantity);
     }, 0);
-    const shipping = subtotal > 500 ? 0 : 40;
-    return subtotal + shipping;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const calculateTax = () => {
+    return calculateSubtotal() * 0.18; // 18% GST
   };
 
-  const handleSubmitAddress = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.email || !formData.phone || 
-        !formData.address || !formData.city || !formData.state || !formData.pincode) {
-      toast.error("Please fill all the required fields");
-      return;
-    }
-    setStep(2);
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateTax() + 40; // 40 rupees delivery fee
   };
 
-  const handleCompleteOrder = async () => {
+  const handlePlaceOrder = async (values: DeliveryFormValues) => {
     try {
-      setProcessing(true);
+      setIsPlacingOrder(true);
       
-      // Check if user is logged in
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Please login to complete your order");
-        navigate("/auth");
-        return;
-      }
-      
-      // In a real app, we would create an order in the database
-      // and clear the cart
-      
-      // Simulate order processing
+      // In a real app, you would create an order record in your database
+      // For now, we'll just simulate a delay to show the loading state
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Navigate to order confirmation
+      navigate("/order-confirmation", { 
+        state: { 
+          orderDetails: {
+            items: cartItems,
+            delivery: values,
+            payment: {
+              method: paymentMethod,
+              total: calculateTotal(),
+            },
+            orderNumber: `ORD-${Math.floor(100000 + Math.random() * 900000)}`,
+            orderDate: new Date().toISOString(),
+          }
+        } 
+      });
+      
       toast.success("Order placed successfully!");
-      navigate("/order-confirmation");
     } catch (error) {
-      console.error("Error placing order:", error);
+      console.error("Failed to place order:", error);
       toast.error("Failed to place order. Please try again.");
     } finally {
-      setProcessing(false);
+      setIsPlacingOrder(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-        <div className="flex justify-center items-center h-40">
-          <p>Loading checkout details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (cartItems.length === 0) {
-    return (
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-6">Your cart is empty. Please add items to checkout.</p>
-          <Button onClick={() => navigate("/")}>Shop Now</Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto px-4 pt-24 pb-12">
-      <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              {step === 1 ? (
-                <form onSubmit={handleSubmitAddress}>
-                  <h2 className="text-lg font-semibold mb-4">Shipping Address</h2>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="container mx-auto px-4 pt-24 pb-16">
+        <Button 
+          variant="ghost" 
+          className="mb-6" 
+          onClick={() => navigate("/cart")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Cart
+        </Button>
+        
+        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Checkout Form */}
+          <div className="col-span-2">
+            <Tabs 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="delivery">Delivery Details</TabsTrigger>
+                <TabsTrigger value="payment">Payment Method</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="delivery">
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-xl font-semibold mb-6">Delivery Information</h2>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name *</label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-1">Email *</label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone *</label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <label htmlFor="address" className="block text-sm font-medium mb-1">Address *</label>
-                      <input
-                        type="text"
-                        id="address"
+                  <Form {...form}>
+                    <form className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="phoneNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone Number</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="tel" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
                         name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} className="resize-none" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="city" className="block text-sm font-medium mb-1">City *</label>
-                      <input
-                        type="text"
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="state" className="block text-sm font-medium mb-1">State *</label>
-                      <input
-                        type="text"
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="pincode" className="block text-sm font-medium mb-1">Pincode *</label>
-                      <input
-                        type="text"
-                        id="pincode"
-                        name="pincode"
-                        value={formData.pincode}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                  </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="zipCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>ZIP Code</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="button"
+                        className="bg-primary hover:bg-primary-hover"
+                        onClick={() => {
+                          if (Object.keys(form.formState.errors).length === 0) {
+                            setActiveTab("payment");
+                          } else {
+                            form.trigger();
+                          }
+                        }}
+                      >
+                        Continue to Payment
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="payment">
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-xl font-semibold mb-6">Payment Method</h2>
                   
-                  <Button type="submit" className="w-full bg-primary hover:bg-primary-hover">
-                    Continue to Payment
-                  </Button>
-                </form>
-              ) : (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
+                  <RadioGroup 
+                    value={paymentMethod} 
+                    onValueChange={(value) => setPaymentMethod(value)}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center space-x-2 border p-4 rounded-lg">
+                      <RadioGroupItem value="cod" id="cod" />
+                      <Label htmlFor="cod" className="flex-1 cursor-pointer">Cash on Delivery</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border p-4 rounded-lg">
+                      <RadioGroupItem value="card" id="card" disabled />
+                      <Label htmlFor="card" className="flex-1 cursor-not-allowed text-gray-400">
+                        <div className="flex items-center">
+                          <CreditCard className="mr-2 h-4 w-4" /> 
+                          Credit/Debit Card
+                          <span className="ml-2 text-xs text-gray-400">(Coming soon)</span>
+                        </div>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border p-4 rounded-lg">
+                      <RadioGroupItem value="upi" id="upi" disabled />
+                      <Label htmlFor="upi" className="flex-1 cursor-not-allowed text-gray-400">
+                        UPI Payment
+                        <span className="ml-2 text-xs text-gray-400">(Coming soon)</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
                   
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="radio"
-                        id="cod"
-                        name="paymentMethod"
-                        value="cod"
-                        checked={formData.paymentMethod === "cod"}
-                        onChange={handleInputChange}
-                        className="h-4 w-4"
-                      />
-                      <label htmlFor="cod">Cash on Delivery</label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 text-gray-400">
-                      <input
-                        type="radio"
-                        id="card"
-                        name="paymentMethod"
-                        value="card"
-                        disabled
-                        className="h-4 w-4"
-                      />
-                      <label htmlFor="card">Credit/Debit Card (Coming Soon)</label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 text-gray-400">
-                      <input
-                        type="radio"
-                        id="upi"
-                        name="paymentMethod"
-                        value="upi"
-                        disabled
-                        className="h-4 w-4"
-                      />
-                      <label htmlFor="upi">UPI (Coming Soon)</label>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                  <div className="mt-8 flex justify-between">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setActiveTab("delivery")}
+                    >
                       Back
                     </Button>
                     <Button 
-                      onClick={handleCompleteOrder} 
-                      className="flex-1 bg-primary hover:bg-primary-hover"
-                      disabled={processing}
+                      type="button" 
+                      className="bg-primary hover:bg-primary-hover"
+                      onClick={() => form.handleSubmit(handlePlaceOrder)()}
+                      disabled={isPlacingOrder}
                     >
-                      {processing ? "Processing..." : "Place Order"}
+                      {isPlacingOrder ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Place Order"
+                      )}
                     </Button>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="lg:col-span-1">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-              
-              <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="w-12 h-12 flex-shrink-0">
-                      <img 
-                        src={item.product.image || 'https://placehold.co/100x100?text=Product'} 
-                        alt={item.product.name}
-                        className="w-full h-full object-contain rounded-md"
-                      />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Order Summary */}
+          <div className="col-span-1">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+              <h2 className="text-lg font-bold mb-4">Order Summary</h2>
+              <div className="space-y-4 mb-4">
+                {cartItems.map(item => (
+                  <div key={item.id} className="flex justify-between">
+                    <div>
+                      <span className="font-medium">{item.product.name}</span>
+                      <span className="text-gray-500 block text-sm">Qty: {item.quantity}</span>
                     </div>
-                    <div className="flex-grow">
-                      <p className="text-sm font-medium line-clamp-1">{item.product.name}</p>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-xs text-gray-600">Qty: {item.quantity}</span>
-                        <span className="text-sm">₹{(item.product.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                    </div>
+                    <span>₹{(item.product.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
               
               <Separator className="my-4" />
               
-              <div className="space-y-3 mb-6">
+              <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>₹{cartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0).toFixed(2)}</span>
+                  <span>₹{calculateSubtotal().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span>
-                    {cartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0) > 500 
-                      ? 'Free' 
-                      : '₹40.00'}
-                  </span>
+                  <span className="text-gray-600">GST (18%)</span>
+                  <span>₹{calculateTax().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Delivery Fee</span>
+                  <span>₹40.00</span>
                 </div>
               </div>
               
-              <Separator className="my-4" />
+              <Separator />
               
-              <div className="flex justify-between mb-2">
-                <span className="font-semibold">Total</span>
-                <span className="font-semibold">₹{calculateTotal().toFixed(2)}</span>
+              <div className="flex justify-between py-4 font-bold">
+                <span>Total</span>
+                <span>₹{calculateTotal().toFixed(2)}</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
