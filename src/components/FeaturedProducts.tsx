@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ImageOff } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -11,56 +12,56 @@ export const products = [
     name: "Fortune Sunlite Refined Sunflower Oil",
     price: 199,
     unit: "1L",
-    image: "https://www.jiomart.com/images/product/original/490000052/fortune-sunlite-refined-sunflower-oil-1-l-pouch-product-images-o490000052-p490000052-0-202203150455.jpg",
+    image: "/images/sunflower oil.jpeg",
   },
   {
     id: "2",
     name: "Tata Salt",
     price: 25,
     unit: "1kg",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/241600_7-tata-salt-iodized.jpg",
+    image: "/images/tata salt.jpeg",
   },
   {
     id: "3",
     name: "Aashirvaad Atta with Multigrains",
     price: 325,
     unit: "5kg",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/1204474_1-aashirvaad-multigrain-atta.jpg",
+    image: "/images/aashirvaad atta.jpeg",
   },
   {
     id: "4",
     name: "Saffola Active Refined Oil",
     price: 215,
     unit: "1L",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/1211213_1-saffola-active-pro-weight-watchers-blend-oil.jpg",
+    image: "/images/saffola oil.jpeg",
   },
   {
     id: "5",
     name: "Maggi 2-Minute Noodles",
     price: 72,
     unit: "pack of 6",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/1209291_1-maggi-2-minute-instant-noodles-masala.jpg",
+    image: "/images/maggi.jpg",
   },
   {
     id: "6",
     name: "Daawat Basmati Rice - Premium",
     price: 299,
     unit: "1kg",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/10000484_2-daawat-rozana-super-basmati-rice.jpg",
+    image: "/images/daawat basmati.jpg",
   },
   {
     id: "7",
     name: "Bournvita Health Drink",
     price: 245,
     unit: "500g",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/1203945_1-cadbury-bournvita-pro-health-chocolate-drink.jpg",
+    image: "/images/bournvita.jpeg",
   },
   {
     id: "8",
     name: "Red Label Tea",
     price: 170,
     unit: "500g",
-    image: "https://www.bigbasket.com/media/uploads/p/xxl/241877_8-brooke-bond-red-label-tea.jpg",
+    image: "/images/red label tea.jpg",
   },
 ];
 

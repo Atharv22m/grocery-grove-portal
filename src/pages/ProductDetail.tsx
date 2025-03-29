@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
@@ -19,12 +18,10 @@ export default function ProductDetail() {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    // In a real app, we would fetch the product from the API
-    // For now, we're using the hardcoded products
     const foundProduct = products.find(p => p.id === id);
     setProduct(foundProduct);
     setLoading(false);
-    setImageError(false); // Reset image error state when product changes
+    setImageError(false);
   }, [id]);
 
   const handleAddToCart = () => {
