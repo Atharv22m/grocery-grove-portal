@@ -16,14 +16,14 @@ import { toast } from "sonner";
 // Schema for login form
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 // Schema for signup form with password confirmation
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   fullName: z.string().min(2, "Name must be at least 2 characters"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -82,6 +82,7 @@ export const AuthForm = () => {
   const onSignupSubmit = async (values: z.infer<typeof signupSchema>) => {
     try {
       setIsLoading(true);
+      console.log("Signing up with:", values);
       
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -93,7 +94,10 @@ export const AuthForm = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
       
       // Create a profile entry
       if (data.user) {
@@ -107,8 +111,14 @@ export const AuthForm = () => {
         if (profileError) console.error("Failed to create profile:", profileError);
       }
 
-      toast.success("Account created successfully! Please verify your email.");
-      setActiveTab("login");
+      toast.success("Account created successfully! Please check your email to verify your account.");
+      
+      // If auto-confirmation is enabled or email confirmation is not required
+      if (data.session) {
+        navigate("/");
+      } else {
+        setActiveTab("login");
+      }
       
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -245,7 +255,7 @@ export const AuthForm = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Password (min 8 characters)</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
