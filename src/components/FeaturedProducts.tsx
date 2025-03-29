@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, ImageOff } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -68,6 +68,7 @@ export const products = [
 export const FeaturedProducts = () => {
   const { addToCart } = useCart();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const handleAddToCart = async (productId: string) => {
     try {
@@ -82,6 +83,13 @@ export const FeaturedProducts = () => {
     }
   };
 
+  const handleImageError = (productId: string) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [productId]: true
+    }));
+  };
+
   return (
     <section className="py-16 bg-secondary">
       <div className="container mx-auto px-4">
@@ -94,11 +102,19 @@ export const FeaturedProducts = () => {
             >
               <Link to={`/product/${product.id}`} className="block mb-4">
                 <div className="mb-4 flex justify-center h-40">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="object-contain h-full w-full rounded-md"
-                  />
+                  {imageErrors[product.id] ? (
+                    <div className="flex flex-col items-center justify-center text-gray-400">
+                      <ImageOff size={32} />
+                      <p className="text-sm mt-2">Image not available</p>
+                    </div>
+                  ) : (
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="object-contain h-full w-full rounded-md"
+                      onError={() => handleImageError(product.id)}
+                    />
+                  )}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
                 <div className="flex justify-between items-center mb-4">
