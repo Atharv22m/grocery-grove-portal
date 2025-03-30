@@ -11,4 +11,13 @@ export interface ProductType {
   stock: number;
   weight?: string;
   discount?: number;
+  reviews?: Review[];
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  userName: string;
+  date: string;
 }
