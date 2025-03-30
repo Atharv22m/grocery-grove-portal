@@ -30,8 +30,8 @@ const ProductDetail: React.FC = () => {
   const handleAddToCart = async () => {
     if (product) {
       try {
-        await addToCart(product.id, quantity);
-        toast.success(`Added ${quantity} ${product.name} to cart`);
+        await addToCart(product.id);
+        toast.success(`Added ${product.name} to cart`);
       } catch (error) {
         console.error("Failed to add item to cart:", error);
         toast.error("Failed to add item to cart");
@@ -53,7 +53,7 @@ const ProductDetail: React.FC = () => {
   }
 
   // Calculate the original price if there's a discount
-  const originalPrice = product.discount 
+  const originalPrice = product?.discount 
     ? Math.round(product.price / (1 - product.discount / 100)) 
     : null;
 
@@ -64,26 +64,26 @@ const ProductDetail: React.FC = () => {
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         <Card className="p-6 flex justify-center items-center bg-white">
           <img 
-            src={product.image} 
-            alt={product.name} 
+            src={product?.image} 
+            alt={product?.name} 
             className="max-h-96 object-contain"
           />
         </Card>
         
         <div>
-          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          <h1 className="text-3xl font-bold mb-2">{product?.name}</h1>
           
           <div className="mb-4">
-            <ProductRating rating={product.rating} size={20} />
+            <ProductRating rating={product?.rating || 0} size={20} />
           </div>
           
-          <p className="text-gray-700 mb-6">{product.description}</p>
+          <p className="text-gray-700 mb-6">{product?.description}</p>
           
           <div className="flex items-baseline mb-4">
             <span className="text-3xl font-bold text-primary mr-3">
-              ₹{product.price}
+              ₹{product?.price}
             </span>
-            <span className="text-gray-500">per {product.unit}</span>
+            <span className="text-gray-500">per {product?.unit}</span>
             
             {originalPrice && (
               <span className="ml-4 text-gray-500 line-through">
@@ -92,7 +92,7 @@ const ProductDetail: React.FC = () => {
             )}
           </div>
 
-          {product.discount && (
+          {product?.discount && (
             <div className="mb-6">
               <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                 {product.discount}% OFF
@@ -116,7 +116,7 @@ const ProductDetail: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setQuantity(quantity + 1)}
-                disabled={product.stock && quantity >= product.stock}
+                disabled={product?.stock && quantity >= product.stock}
                 className="px-3 py-1 h-auto"
               >
                 +
@@ -124,7 +124,7 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
 
-          {product.stock !== undefined && (
+          {product?.stock !== undefined && (
             <p className="mb-6 text-sm">
               {product.stock > 0 
                 ? <span className="text-green-600">In stock and ready to ship</span>
@@ -136,7 +136,7 @@ const ProductDetail: React.FC = () => {
             <Button 
               className="w-full"
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={product?.stock === 0}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />
               Add to Cart
@@ -156,12 +156,14 @@ const ProductDetail: React.FC = () => {
         </div>
       </div>
       
-      <ProductDetails product={product} />
+      {product && <ProductDetails product={product} />}
       
-      <ProductRecommendations 
-        currentProductId={product.id}
-        category={product.category}
-      />
+      {product && (
+        <ProductRecommendations 
+          currentProductId={product.id}
+          category={product.category}
+        />
+      )}
     </div>
   );
 };

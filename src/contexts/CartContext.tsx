@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,7 +17,7 @@ type CartItem = {
 
 type CartContextType = {
   cartItems: CartItem[];
-  addToCart: (productId: string) => Promise<void>;
+  addToCart: (productId: string, quantity?: number) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   isLoading: boolean;
@@ -39,7 +38,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // For demo purposes, we'll use localStorage for cart when user is not logged in
         const localCart = localStorage.getItem('cart');
         if (localCart) {
           setCartItems(JSON.parse(localCart));
@@ -63,7 +61,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Map the Supabase response to match our CartItem type
       const mappedCartItems: CartItem[] = (data || []).map(item => ({
         id: item.id,
         product_id: item.product_id,
@@ -81,13 +78,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addToCart = async (productId: string) => {
+  const addToCart = async (productId: string, quantity: number = 1) => {
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // Handle guest cart with local storage
         const productToAdd = products.find(p => p.id === productId);
         
         if (!productToAdd) {
@@ -98,7 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const newItem: CartItem = {
           id: `local-${Date.now()}`,
           product_id: productId,
-          quantity: 1,
+          quantity: quantity,
           product: {
             name: productToAdd.name,
             price: productToAdd.price,
@@ -111,7 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const existingItemIndex = updatedCart.findIndex(item => item.product_id === productId);
         
         if (existingItemIndex >= 0) {
-          updatedCart[existingItemIndex].quantity += 1;
+          updatedCart[existingItemIndex].quantity += quantity;
         } else {
           updatedCart.push(newItem);
         }
@@ -126,7 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         .upsert({
           user_id: user.id,
           product_id: productId,
-          quantity: 1
+          quantity: quantity
         }, {
           onConflict: 'user_id,product_id',
           ignoreDuplicates: false
@@ -151,7 +147,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // Handle local storage cart for guest users
         const updatedCart = cartItems.filter(item => item.id !== cartItemId);
         setCartItems(updatedCart);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
@@ -181,7 +176,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // Handle local storage cart for guest users
         const updatedCart = cartItems.map(item => 
           item.id === cartItemId ? { ...item, quantity } : item
         );
