@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ImageOff, Search } from "lucide-react";
+import { ShoppingCart, ImageOff, Search, Heart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { products } from "@/components/FeaturedProducts";
 import { toast } from "sonner";
 import { categories } from "@/components/Categories";
@@ -16,6 +18,7 @@ export default function Products() {
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [activeCategory, setActiveCategory] = useState<string>("All Products");
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState(searchParam || "");
@@ -137,8 +140,20 @@ export default function Products() {
           {filteredProducts.map(product => (
             <div 
               key={product.id}
-              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow relative"
             >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-10 hover:bg-gray-100"
+                onClick={() => toggleWishlist(product.id)}
+              >
+                <Heart 
+                  size={20} 
+                  className={isInWishlist(product.id) ? "text-red-500" : "text-gray-400"} 
+                  fill={isInWishlist(product.id) ? "currentColor" : "none"} 
+                />
+              </Button>
               <Link to={`/product/${product.id}`} className="block mb-4">
                 <div className="mb-4 flex justify-center h-40">
                   {imageErrors[product.id] ? (

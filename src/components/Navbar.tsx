@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   DropdownMenu,
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
+  const { wishlistItems } = useWishlist();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -59,6 +61,7 @@ export const Navbar: React.FC = () => {
   };
 
   const cartItemCount = cartItems.length;
+  const wishlistItemCount = wishlistItems.length;
 
   return (
     <nav className="bg-white shadow-sm fixed w-full z-50">
@@ -111,6 +114,18 @@ export const Navbar: React.FC = () => {
               </Link>
             )}
             
+            <Link to="/wishlist">
+              <Button variant="outline" className="relative">
+                <Heart className="mr-2 h-4 w-4" />
+                Wishlist
+                {wishlistItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistItemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+            
             <Link to="/cart">
               <Button className="bg-primary hover:bg-primary-hover text-white relative">
                 <ShoppingCart className="mr-2 h-4 w-4" />
@@ -152,6 +167,20 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
+              </Link>
+              
+              <Link 
+                to="/wishlist" 
+                className="text-gray-700 hover:text-primary transition-colors flex items-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Heart className="inline mr-2 h-4 w-4" />
+                Wishlist
+                {wishlistItemCount > 0 && (
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistItemCount}
+                  </span>
+                )}
               </Link>
               
               {loading ? (

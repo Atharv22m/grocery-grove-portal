@@ -5,6 +5,7 @@ import { products } from '@/components/FeaturedProducts';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { toast } from 'sonner';
 import { ProductType } from '@/types/product';
 import { Card } from '@/components/ui/card';
@@ -16,9 +17,9 @@ import { Navbar } from '@/components/Navbar';
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<ProductType | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [isWishlist, setIsWishlist] = useState(false);
 
   useEffect(() => {
     const foundProduct = products.find(p => p.id === id);
@@ -40,9 +41,10 @@ const ProductDetail: React.FC = () => {
     }
   };
 
-  const toggleWishlist = () => {
-    setIsWishlist(!isWishlist);
-    toast.success(isWishlist ? "Removed from wishlist" : "Added to wishlist");
+  const handleToggleWishlist = async () => {
+    if (product) {
+      await toggleWishlist(product.id);
+    }
   };
 
   if (!product) {
@@ -150,13 +152,13 @@ const ProductDetail: React.FC = () => {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={toggleWishlist}
+                onClick={handleToggleWishlist}
               >
                 <Heart 
                   className="mr-2 h-4 w-4" 
-                  fill={isWishlist ? "currentColor" : "none"} 
+                  fill={isInWishlist(product.id) ? "currentColor" : "none"} 
                 />
-                {isWishlist ? "Saved" : "Save for Later"}
+                {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
               </Button>
             </div>
           </div>
