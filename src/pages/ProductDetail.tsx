@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { products } from '@/components/FeaturedProducts';
@@ -30,7 +29,7 @@ const ProductDetail: React.FC = () => {
   const handleAddToCart = async () => {
     if (product) {
       try {
-        await addToCart(product.id);
+        await addToCart(product.id, quantity); // Pass quantity as second argument
         toast.success(`Added ${product.name} to cart`);
       } catch (error) {
         console.error("Failed to add item to cart:", error);

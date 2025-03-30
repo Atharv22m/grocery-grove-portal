@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -15,7 +14,7 @@ export default function Products() {
   const categoryParam = searchParams.get("category");
   const searchParam = searchParams.get("search");
   const [filteredProducts, setFilteredProducts] = useState(products);
-  const [activeCategory, setActiveCategory] = useState("All Products");
+  const [activeCategory, setActiveCategory] = useState<string>("All Products");
   const { addToCart } = useCart();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -24,7 +23,6 @@ export default function Products() {
   useEffect(() => {
     let result = [...products];
     
-    // Apply search filter if it exists
     if (searchParam) {
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchParam.toLowerCase())
@@ -32,11 +30,9 @@ export default function Products() {
       setSearchQuery(searchParam);
     }
     
-    // Apply category filter if it exists
     if (categoryParam) {
       setActiveCategory(categoryParam);
       
-      // Find matching category and apply its filter
       const selectedCategory = categories.find(cat => cat.name === categoryParam);
       
       if (selectedCategory) {
@@ -52,9 +48,9 @@ export default function Products() {
   const handleAddToCart = async (productId: string) => {
     try {
       setLoadingProductId(productId);
-      await addToCart(productId);
+      await addToCart(productId, 1);
       toast.success("Item added to cart");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to add item to cart:", error);
       toast.error("Failed to add item to cart");
     } finally {
@@ -72,7 +68,6 @@ export default function Products() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Update the URL parameters
     const newParams = new URLSearchParams(searchParams);
     if (searchQuery) {
       newParams.set("search", searchQuery);
@@ -88,7 +83,6 @@ export default function Products() {
       <div className="container mx-auto px-4 pt-24 pb-12">
         <h1 className="text-3xl font-bold mb-6">Products</h1>
         
-        {/* Search bar */}
         <form onSubmit={handleSearch} className="mb-6 flex gap-2">
           <div className="relative flex-1">
             <Input
@@ -105,7 +99,6 @@ export default function Products() {
           </Button>
         </form>
         
-        {/* Category filter buttons */}
         <div className="flex flex-wrap gap-2 mb-8">
           <Button 
             variant={activeCategory === "All Products" ? "default" : "outline"}
@@ -140,7 +133,6 @@ export default function Products() {
           ))}
         </div>
 
-        {/* Products grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map(product => (
             <div 
