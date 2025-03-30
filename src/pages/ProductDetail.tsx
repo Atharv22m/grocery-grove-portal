@@ -20,6 +20,7 @@ interface ProductType {
   stock: number;
   weight?: string;
   discount?: number;
+  unit?: string; // Added unit property to match the data
 }
 
 const ProductDetail = () => {
@@ -38,7 +39,20 @@ const ProductDetail = () => {
       try {
         const foundProduct = products.find(p => p.id === id);
         if (foundProduct) {
-          setProduct(foundProduct);
+          // Make sure we're creating a complete ProductType object
+          setProduct({
+            id: foundProduct.id,
+            name: foundProduct.name,
+            description: foundProduct.description || "No description available", // Provide defaults for required fields
+            price: foundProduct.price,
+            image: foundProduct.image,
+            category: foundProduct.category || "General", // Default category
+            rating: foundProduct.rating || 4, // Default rating
+            stock: foundProduct.stock || 10, // Default stock
+            unit: foundProduct.unit,
+            weight: foundProduct.weight,
+            discount: foundProduct.discount,
+          });
         } else {
           toast.error("Product not found");
           navigate("/products");
@@ -62,13 +76,8 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        quantity
-      });
+      // Pass only the product ID as expected by the addToCart function
+      addToCart(product.id);
       toast.success(`${product.name} added to cart`);
     }
   };
@@ -114,9 +123,9 @@ const ProductDetail = () => {
   }
 
   // Calculate discounted price if applicable
-  const actualPrice = product.discount
+  const actualPrice = product?.discount
     ? product.price - (product.price * product.discount / 100)
-    : product.price;
+    : product?.price;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -134,8 +143,8 @@ const ProductDetail = () => {
           {/* Product Image */}
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <img
-              src={product.image}
-              alt={product.name}
+              src={product?.image}
+              alt={product?.name}
               className="w-full h-auto object-contain rounded-md"
               style={{ maxHeight: "400px" }}
             />
@@ -146,43 +155,43 @@ const ProductDetail = () => {
             <div>
               <div className="flex items-center">
                 <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  {product.category}
+                  {product?.category}
                 </span>
                 <div className="flex items-center ml-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < product.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+                        i < (product?.rating || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
                       }`}
                     />
                   ))}
-                  <span className="ml-1 text-sm text-gray-600">({product.rating})</span>
+                  <span className="ml-1 text-sm text-gray-600">({product?.rating})</span>
                 </div>
               </div>
-              <h1 className="text-3xl font-bold mt-2">{product.name}</h1>
+              <h1 className="text-3xl font-bold mt-2">{product?.name}</h1>
               <div className="mt-2">
-                {product.discount ? (
+                {product?.discount ? (
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-primary">₹{actualPrice.toFixed(2)}</span>
-                    <span className="ml-2 text-lg text-gray-400 line-through">₹{product.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-primary">₹{actualPrice?.toFixed(2)}</span>
+                    <span className="ml-2 text-lg text-gray-400 line-through">₹{product?.price.toFixed(2)}</span>
                     <span className="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
                       {product.discount}% OFF
                     </span>
                   </div>
                 ) : (
-                  <span className="text-2xl font-bold text-primary">₹{product.price.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-primary">₹{product?.price.toFixed(2)}</span>
                 )}
               </div>
             </div>
 
-            {product.weight && (
+            {product?.weight && (
               <div className="text-sm text-gray-500">Weight: {product.weight}</div>
             )}
 
             <div className="border-t border-b border-gray-200 py-4">
               <div className="prose max-w-none">
-                <p className="text-gray-700">{product.description}</p>
+                <p className="text-gray-700">{product?.description}</p>
               </div>
             </div>
 
@@ -204,14 +213,14 @@ const ProductDetail = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleQuantityChange(quantity + 1)}
-                  disabled={quantity >= product.stock}
+                  disabled={quantity >= (product?.stock || 0)}
                   className="h-10 w-10 rounded-l-none"
                 >
                   <PlusCircle className="h-4 w-4" />
                 </Button>
               </div>
               <span className="ml-4 text-sm text-gray-500">
-                {product.stock} items available
+                {product?.stock} items available
               </span>
             </div>
 
@@ -236,17 +245,23 @@ const ProductDetail = () => {
                 <ul className="space-y-2 text-sm">
                   <li className="flex">
                     <span className="font-medium w-28">Category:</span>
-                    <span className="text-gray-600">{product.category}</span>
+                    <span className="text-gray-600">{product?.category}</span>
                   </li>
-                  {product.weight && (
+                  {product?.weight && (
                     <li className="flex">
                       <span className="font-medium w-28">Weight:</span>
                       <span className="text-gray-600">{product.weight}</span>
                     </li>
                   )}
+                  {product?.unit && (
+                    <li className="flex">
+                      <span className="font-medium w-28">Unit:</span>
+                      <span className="text-gray-600">{product.unit}</span>
+                    </li>
+                  )}
                   <li className="flex">
                     <span className="font-medium w-28">Stock:</span>
-                    <span className="text-gray-600">{product.stock} items</span>
+                    <span className="text-gray-600">{product?.stock} items</span>
                   </li>
                 </ul>
               </CardContent>
