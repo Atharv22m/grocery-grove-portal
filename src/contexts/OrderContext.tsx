@@ -4,14 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "./CartContext";
 
-type OrderItem = {
+export type OrderItem = {
   product_id: string;
   quantity: number;
   price: number;
   name: string;
 };
 
-type OrderType = {
+export type OrderType = {
   id: string;
   user_id: string;
   items: OrderItem[];
@@ -53,10 +53,22 @@ type OrderContextType = {
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
+// For local storage persistence
+const ORDERS_STORAGE_KEY = "grocery_app_orders";
+
 export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
-  const [orders, setOrders] = useState<OrderType[]>([]);
+  const [orders, setOrders] = useState<OrderType[]>(() => {
+    // Initialize from localStorage if available
+    const savedOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
+    return savedOrders ? JSON.parse(savedOrders) : [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { cartItems, removeFromCart } = useCart();
+
+  // Helper to save orders to localStorage
+  const saveOrdersToStorage = (ordersList: OrderType[]) => {
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(ordersList));
+  };
 
   const createOrder = async (orderData: {
     delivery: {
@@ -93,29 +105,24 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
       
-      const newOrder = {
+      // Generate a unique ID for the order
+      const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      
+      const newOrder: OrderType = {
+        id: orderId,
         user_id: user.id,
         items,
         delivery_info: orderData.delivery,
         payment_info: orderData.payment,
-        status: "pending" as const,
+        status: "pending",
         created_at: new Date().toISOString()
       };
       
-      const { data, error } = await supabase
-        .from("orders")
-        .insert(newOrder)
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      const createdOrder = data as OrderType;
-      
-      // Add to local state
-      setOrders(prev => [createdOrder, ...prev]);
+      // In a real app, we would save this to the database
+      // Since we don't have an orders table yet, we'll just save to state and localStorage
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      saveOrdersToStorage(updatedOrders);
       
       // Clear cart after successful order
       for (const item of cartItems) {
@@ -123,7 +130,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       toast.success("Order placed successfully");
-      return createdOrder;
+      return newOrder;
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast.error("Failed to place order: " + error.message);
@@ -143,17 +150,10 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      setOrders(data as OrderType[]);
+      // In a real app, we would fetch from the database
+      // For now, filter the orders from localStorage for the current user
+      const userOrders = orders.filter(order => order.user_id === user.id);
+      setOrders(userOrders);
     } catch (error: any) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to fetch orders: " + error.message);
