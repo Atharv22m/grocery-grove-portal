@@ -1,375 +1,291 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { useCart } from "@/contexts/CartContext";
+import { useOrders } from "@/contexts/OrderContext";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const deliverySchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City must be at least 2 characters"),
-  state: z.string().min(2, "State must be at least 2 characters"),
-  zipCode: z.string().min(6, "ZIP code must be at least 6 characters"),
-});
-
-type DeliveryFormValues = z.infer<typeof deliverySchema>;
 
 export default function Checkout() {
-  const { cartItems } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const navigate = useNavigate();
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("delivery");
-
-  const form = useForm<DeliveryFormValues>({
-    resolver: zodResolver(deliverySchema),
-    defaultValues: {
-      fullName: "",
-      phoneNumber: "",
-      address: "",
-      city: "",
-      state: "Karnataka",
-      zipCode: "",
-    },
-  });
-
-  useEffect(() => {
-    // Redirect to cart if cart is empty
+  const { cartItems } = useCart();
+  const { createOrder, isLoading } = useOrders();
+  
+  // Form state
+  const [fullName, setFullName] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+  
+  // Calculate subtotal
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+  
+  // Calculate shipping based on subtotal
+  const shipping = subtotal > 500 ? 0 : 50;
+  
+  // Calculate total
+  const total = subtotal + shipping;
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (cartItems.length === 0) {
-      navigate("/cart");
+      toast.error("Your cart is empty");
+      return;
     }
     
-    // Fetch user profile if logged in
-    const fetchUserProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-            
-          if (profile) {
-            setUserProfile(profile);
-            form.setValue("fullName", profile.full_name || "");
-            form.setValue("phoneNumber", profile.phone_number || "");
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
+    // Basic validation
+    if (!fullName || !address || !city || !state || !zipCode || !phoneNumber) {
+      toast.error("Please fill in all delivery details");
+      return;
+    }
     
-    fetchUserProfile();
-  }, [navigate, cartItems]);
-
-  const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => {
-      return total + (item.product.price * item.quantity);
-    }, 0);
-  };
-
-  const calculateTax = () => {
-    return calculateSubtotal() * 0.18; // 18% GST
-  };
-
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax() + 40; // 40 rupees delivery fee
-  };
-
-  const handlePlaceOrder = async (values: DeliveryFormValues) => {
     try {
-      setIsPlacingOrder(true);
-      
-      // In a real app, you would create an order record in your database
-      // For now, we'll just simulate a delay to show the loading state
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Navigate to order confirmation
-      navigate("/order-confirmation", { 
-        state: { 
-          orderDetails: {
-            items: cartItems,
-            delivery: values,
-            payment: {
-              method: paymentMethod,
-              total: calculateTotal(),
-            },
-            orderNumber: `ORD-${Math.floor(100000 + Math.random() * 900000)}`,
-            orderDate: new Date().toISOString(),
-          }
-        } 
+      const order = await createOrder({
+        delivery: {
+          fullName,
+          address,
+          city,
+          state,
+          zipCode,
+          phoneNumber
+        },
+        payment: {
+          method: paymentMethod,
+          total
+        }
       });
       
-      toast.success("Order placed successfully!");
+      if (order) {
+        const orderDetails = {
+          orderNumber: order.id.slice(0, 8).toUpperCase(),
+          orderDate: order.created_at,
+          items: cartItems,
+          delivery: {
+            fullName,
+            address,
+            city,
+            state,
+            zipCode,
+            phoneNumber
+          },
+          payment: {
+            method: paymentMethod,
+            total
+          }
+        };
+        
+        navigate("/order-confirmation", { state: { orderDetails } });
+      }
     } catch (error) {
-      console.error("Failed to place order:", error);
+      console.error("Error placing order:", error);
       toast.error("Failed to place order. Please try again.");
-    } finally {
-      setIsPlacingOrder(false);
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="container mx-auto px-4 pt-24 pb-16">
-        <Button 
-          variant="ghost" 
-          className="mb-6" 
-          onClick={() => navigate("/cart")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Cart
-        </Button>
-        
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
-          <div className="col-span-2">
-            <Tabs 
-              value={activeTab} 
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="delivery">Delivery Details</TabsTrigger>
-                <TabsTrigger value="payment">Payment Method</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="delivery">
+        
+        {cartItems.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
+            <p className="text-gray-600 mb-6">Add some products to your cart before checking out.</p>
+            <Button onClick={() => navigate("/products")}>Browse Products</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold mb-6">Delivery Information</h2>
-                  
-                  <Form {...form}>
-                    <form className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="fullName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Full Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="phoneNumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Phone Number</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="tel" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} className="resize-none" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
                       />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="state"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>State</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="zipCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>ZIP Code</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <Button 
-                        type="button"
-                        className="bg-primary hover:bg-primary-hover"
-                        onClick={() => {
-                          if (Object.keys(form.formState.errors).length === 0) {
-                            setActiveTab("payment");
-                          } else {
-                            form.trigger();
-                          }
-                        }}
-                      >
-                        Continue to Payment
-                      </Button>
-                    </form>
-                  </Form>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Input
+                        id="phoneNumber"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">ZIP / Postal Code</Label>
+                      <Input
+                        id="zipCode"
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="payment">
+                
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold mb-6">Payment Method</h2>
-                  
-                  <RadioGroup 
-                    value={paymentMethod} 
-                    onValueChange={(value) => setPaymentMethod(value)}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center space-x-2 border p-4 rounded-lg">
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="flex items-center space-x-2 mb-4">
                       <RadioGroupItem value="cod" id="cod" />
-                      <Label htmlFor="cod" className="flex-1 cursor-pointer">Cash on Delivery</Label>
+                      <Label htmlFor="cod">Cash on Delivery</Label>
                     </div>
-                    <div className="flex items-center space-x-2 border p-4 rounded-lg">
-                      <RadioGroupItem value="card" id="card" disabled />
-                      <Label htmlFor="card" className="flex-1 cursor-not-allowed text-gray-400">
-                        <div className="flex items-center">
-                          <CreditCard className="mr-2 h-4 w-4" /> 
-                          Credit/Debit Card
-                          <span className="ml-2 text-xs text-gray-400">(Coming soon)</span>
-                        </div>
-                      </Label>
+                    
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="upi" id="upi" />
+                      <Label htmlFor="upi">UPI Payment</Label>
                     </div>
-                    <div className="flex items-center space-x-2 border p-4 rounded-lg">
-                      <RadioGroupItem value="upi" id="upi" disabled />
-                      <Label htmlFor="upi" className="flex-1 cursor-not-allowed text-gray-400">
-                        UPI Payment
-                        <span className="ml-2 text-xs text-gray-400">(Coming soon)</span>
-                      </Label>
-                    </div>
+                    
+                    {/* More payment methods can be added here */}
                   </RadioGroup>
-                  
-                  <div className="mt-8 flex justify-between">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setActiveTab("delivery")}
-                    >
-                      Back
-                    </Button>
-                    <Button 
-                      type="button" 
-                      className="bg-primary hover:bg-primary-hover"
-                      onClick={() => form.handleSubmit(handlePlaceOrder)()}
-                      disabled={isPlacingOrder}
-                    >
-                      {isPlacingOrder ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        "Place Order"
-                      )}
-                    </Button>
-                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Order Summary */}
-          <div className="col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-              <h2 className="text-lg font-bold mb-4">Order Summary</h2>
-              <div className="space-y-4 mb-4">
-                {cartItems.map(item => (
-                  <div key={item.id} className="flex justify-between">
-                    <div>
-                      <span className="font-medium">{item.product.name}</span>
-                      <span className="text-gray-500 block text-sm">Qty: {item.quantity}</span>
+                
+                <div className="lg:hidden">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                    <div className="space-y-3">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="flex justify-between text-sm">
+                          <span>
+                            {item.quantity} x {item.product.name}
+                          </span>
+                          <span className="font-medium">
+                            ₹{(item.product.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                    <span>₹{(item.product.price * item.quantity).toFixed(2)}</span>
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Shipping</span>
+                        <span className="font-medium">
+                          {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total</span>
+                        <span>₹{total.toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span>₹{calculateSubtotal().toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">GST (18%)</span>
-                  <span>₹{calculateTax().toFixed(2)}</span>
+                
+                <Button
+                  type="submit"
+                  className="w-full py-6 text-lg bg-primary hover:bg-primary-hover"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay ₹${total.toFixed(2)}`
+                  )}
+                </Button>
+              </form>
+            </div>
+            
+            <div className="hidden lg:block">
+              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+                <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                <div className="space-y-3">
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span>
+                        {item.quantity} x {item.product.name}
+                      </span>
+                      <span className="font-medium">
+                        ₹{(item.product.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery Fee</span>
-                  <span>₹40.00</span>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span className="font-medium">
+                      {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>₹{total.toFixed(2)}</span>
+                  </div>
                 </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="flex justify-between py-4 font-bold">
-                <span>Total</span>
-                <span>₹{calculateTotal().toFixed(2)}</span>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

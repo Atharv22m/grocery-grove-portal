@@ -10,7 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, ShoppingBag } from "lucide-react";
+import { useOrders } from "@/contexts/OrderContext";
+import { formatDistanceToNow } from "date-fns";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const Profile = () => {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const { orders, isLoading: isLoadingOrders, fetchOrders } = useOrders();
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -49,6 +52,9 @@ const Profile = () => {
           console.error("Error fetching profile:", error);
           toast.error("Failed to load profile data");
         }
+        
+        // Fetch the user's orders
+        fetchOrders();
       } catch (error) {
         console.error("Failed to fetch user data:", error);
       } finally {
@@ -57,7 +63,7 @@ const Profile = () => {
     };
     
     fetchUserAndProfile();
-  }, [navigate]);
+  }, [navigate, fetchOrders]);
 
   const handleSignOut = async () => {
     try {
@@ -91,6 +97,23 @@ const Profile = () => {
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const getOrderStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "processing":
+        return "bg-blue-100 text-blue-800";
+      case "shipped":
+        return "bg-purple-100 text-purple-800";
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -195,15 +218,67 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <p>You haven't placed any orders yet.</p>
-                  <Button 
-                    className="mt-4 bg-primary hover:bg-primary-hover"
-                    onClick={() => navigate("/products")}
-                  >
-                    Browse Products
-                  </Button>
-                </div>
+                {isLoadingOrders ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p>You haven't placed any orders yet.</p>
+                    <Button 
+                      className="mt-4 bg-primary hover:bg-primary-hover"
+                      onClick={() => navigate("/products")}
+                    >
+                      Browse Products
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4">
+                        <div className="flex flex-wrap justify-between items-start gap-2 mb-4">
+                          <div>
+                            <h3 className="font-medium">Order #{order.id.slice(0, 8).toUpperCase()}</h3>
+                            <p className="text-sm text-gray-500">
+                              {new Date(order.created_at).toLocaleDateString()} ({formatDistanceToNow(new Date(order.created_at), { addSuffix: true })})
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getOrderStatusBadgeClass(order.status)}`}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </span>
+                        </div>
+                        
+                        <Separator className="my-3" />
+                        
+                        <div className="space-y-2 mb-3">
+                          {order.items.map((item: OrderItem, index: number) => (
+                            <div key={index} className="flex justify-between text-sm">
+                              <span>{item.quantity} x {item.name}</span>
+                              <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="flex justify-between font-medium">
+                          <span>Total</span>
+                          <span>₹{order.payment_info.total.toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                          {order.status === "delivered" && (
+                            <Button size="sm" variant="outline">
+                              Buy Again
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
