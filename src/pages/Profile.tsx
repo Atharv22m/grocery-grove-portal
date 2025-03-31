@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -8,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, LogOut, ShoppingBag } from "lucide-react";
+import { Loader2, LogOut, ShoppingBag, UserRound, Mail, Phone, MapPin, Lock } from "lucide-react";
 import { useOrders, OrderItem } from "@/contexts/OrderContext";
 import { formatDistanceToNow } from "date-fns";
 
@@ -21,7 +21,14 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
+  const [bio, setBio] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const { orders, isLoading: isLoadingOrders, fetchOrders } = useOrders();
 
   useEffect(() => {
@@ -48,6 +55,8 @@ const Profile = () => {
           setProfile(profile);
           setFullName(profile.full_name || "");
           setPhoneNumber(profile.phone_number || "");
+          setAddress(profile.address || "");
+          setBio(profile.bio || "");
         } else if (error && error.code !== "PGRST116") {
           console.error("Error fetching profile:", error);
           toast.error("Failed to load profile data");
@@ -86,6 +95,8 @@ const Profile = () => {
           id: user.id,
           full_name: fullName,
           phone_number: phoneNumber,
+          address: address,
+          bio: bio,
           updated_at: new Date().toISOString(),
         });
         
@@ -97,6 +108,46 @@ const Profile = () => {
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    try {
+      setIsChangingPassword(true);
+      setPasswordError("");
+      
+      // Basic validation
+      if (!currentPassword) {
+        setPasswordError("Current password is required");
+        return;
+      }
+      
+      if (newPassword.length < 8) {
+        setPasswordError("New password must be at least 8 characters");
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        setPasswordError("Passwords do not match");
+        return;
+      }
+      
+      // Update the password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Password change error:", error);
+      setPasswordError(error.message || "Failed to update password");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -147,6 +198,7 @@ const Profile = () => {
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="mb-8">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="orders">Order History</TabsTrigger>
             <TabsTrigger value="addresses">Addresses</TabsTrigger>
           </TabsList>
@@ -160,39 +212,96 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    value={user?.email || ""} 
-                    disabled
-                    className="bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Email cannot be changed
-                  </p>
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-primary">
+                      {profile?.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt={fullName || "User"} 
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <UserRound className="h-12 w-12 text-gray-400" />
+                      )}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      className="absolute bottom-0 right-0 rounded-full h-8 w-8 p-0"
+                    >
+                      <span className="sr-only">Change avatar</span>
+                      +
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" /> Email
+                    </Label>
+                    <Input 
+                      id="email" 
+                      value={user?.email || ""} 
+                      disabled
+                      className="bg-gray-100"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Email cannot be changed
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="flex items-center gap-2">
+                      <UserRound className="h-4 w-4" /> Full Name
+                    </Label>
+                    <Input 
+                      id="fullName" 
+                      value={fullName} 
+                      onChange={(e) => setFullName(e.target.value)} 
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber" className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" /> Phone Number
+                    </Label>
+                    <Input 
+                      id="phoneNumber" 
+                      value={phoneNumber} 
+                      onChange={(e) => setPhoneNumber(e.target.value)} 
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" /> Primary Address
+                    </Label>
+                    <Input 
+                      id="address" 
+                      value={address} 
+                      onChange={(e) => setAddress(e.target.value)} 
+                      placeholder="Your address"
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input 
-                    id="fullName" 
-                    value={fullName} 
-                    onChange={(e) => setFullName(e.target.value)} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
-                  <Input 
-                    id="phoneNumber" 
-                    value={phoneNumber} 
-                    onChange={(e) => setPhoneNumber(e.target.value)} 
+                  <Label htmlFor="bio">About Me</Label>
+                  <Textarea 
+                    id="bio" 
+                    value={bio} 
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Tell us a bit about yourself"
+                    rows={3}
                   />
                 </div>
                 
                 <Button 
-                  className="bg-primary hover:bg-primary-hover"
+                  className="bg-primary hover:bg-primary-hover w-full sm:w-auto"
                   onClick={handleSaveProfile}
                   disabled={isSaving}
                 >
@@ -205,6 +314,99 @@ const Profile = () => {
                     "Save Changes"
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="security">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Settings</CardTitle>
+                <CardDescription>
+                  Update your password and security preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <Lock className="h-4 w-4" /> Change Password
+                    </h3>
+                    
+                    {passwordError && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                        {passwordError}
+                      </div>
+                    )}
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="currentPassword">Current Password</Label>
+                        <Input
+                          id="currentPassword"
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="••••••••"
+                        />
+                        <p className="text-xs text-gray-500">
+                          Password must be at least 8 characters long
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      
+                      <Button
+                        onClick={handlePasswordChange}
+                        disabled={isChangingPassword}
+                        className="w-full sm:w-auto"
+                      >
+                        {isChangingPassword ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          "Update Password"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Account Management</h3>
+                    
+                    <div className="space-y-2">
+                      <Button variant="destructive">Delete My Account</Button>
+                      <p className="text-xs text-gray-500">
+                        This will permanently delete your account and all associated data.
+                        This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -285,22 +487,48 @@ const Profile = () => {
           
           <TabsContent value="addresses">
             <Card>
-              <CardHeader>
-                <CardTitle>Saved Addresses</CardTitle>
-                <CardDescription>
-                  Manage your delivery addresses
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Saved Addresses</CardTitle>
+                  <CardDescription>
+                    Manage your delivery addresses
+                  </CardDescription>
+                </div>
+                <Button className="bg-primary hover:bg-primary-hover">
+                  Add New Address
+                </Button>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <p>You don't have any saved addresses yet.</p>
-                  <Button 
-                    className="mt-4 bg-primary hover:bg-primary-hover"
-                    onClick={() => navigate("/checkout")}
-                  >
-                    Add Address
-                  </Button>
-                </div>
+                {address ? (
+                  <div className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{fullName || "Your Address"}</h3>
+                        <p className="text-sm text-gray-700 mt-1">{address}</p>
+                        <p className="text-sm text-gray-700">{phoneNumber || "No phone number"}</p>
+                      </div>
+                      <div>
+                        <Button variant="ghost" size="sm">Edit</Button>
+                        <Button variant="ghost" size="sm" className="text-red-500">Delete</Button>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                        Default
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>You don't have any saved addresses yet.</p>
+                    <Button 
+                      className="mt-4 bg-primary hover:bg-primary-hover"
+                      onClick={() => navigate("/checkout")}
+                    >
+                      Add Address
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
