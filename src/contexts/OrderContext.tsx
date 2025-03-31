@@ -1,8 +1,9 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "./CartContext";
+import { OrderService } from "@/services/OrderService";
 
 export type OrderItem = {
   product_id: string;
@@ -57,15 +58,29 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 const ORDERS_STORAGE_KEY = "grocery_app_orders";
 
 export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
-  const [orders, setOrders] = useState<OrderType[]>(() => {
-    // Initialize from localStorage if available
-    const savedOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
-    return savedOrders ? JSON.parse(savedOrders) : [];
-  });
+  const [orders, setOrders] = useState<OrderType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { cartItems, removeFromCart } = useCart();
 
-  // Helper to save orders to localStorage
+  // Fetch orders when the user logs in
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        fetchOrders();
+      } else if (event === 'SIGNED_OUT') {
+        setOrders([]);
+      }
+    });
+
+    // Initial fetch
+    fetchOrders();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Helper to save orders to localStorage (for non-logged in users)
   const saveOrdersToStorage = (ordersList: OrderType[]) => {
     localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(ordersList));
   };
@@ -105,24 +120,20 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
       
-      // Generate a unique ID for the order
-      const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-      
-      const newOrder: OrderType = {
-        id: orderId,
-        user_id: user.id,
+      // Create the order using our service
+      const newOrder = await OrderService.createOrder({
+        userId: user.id,
         items,
-        delivery_info: orderData.delivery,
-        payment_info: orderData.payment,
-        status: "pending",
-        created_at: new Date().toISOString()
-      };
+        deliveryInfo: orderData.delivery,
+        paymentInfo: orderData.payment
+      });
       
-      // In a real app, we would save this to the database
-      // Since we don't have an orders table yet, we'll just save to state and localStorage
-      const updatedOrders = [newOrder, ...orders];
-      setOrders(updatedOrders);
-      saveOrdersToStorage(updatedOrders);
+      if (!newOrder) {
+        throw new Error("Failed to create order");
+      }
+      
+      // Update local state
+      setOrders(prev => [newOrder, ...prev]);
       
       // Clear cart after successful order
       for (const item of cartItems) {
@@ -146,13 +157,16 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // Not logged in, no orders to fetch
+        // Not logged in, try to get orders from local storage
+        const savedOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
+        if (savedOrders) {
+          setOrders(JSON.parse(savedOrders));
+        }
         return;
       }
       
-      // In a real app, we would fetch from the database
-      // For now, filter the orders from localStorage for the current user
-      const userOrders = orders.filter(order => order.user_id === user.id);
+      // Fetch orders using our service
+      const userOrders = await OrderService.fetchUserOrders(user.id);
       setOrders(userOrders);
     } catch (error: any) {
       console.error("Error fetching orders:", error);
