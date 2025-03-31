@@ -13,6 +13,18 @@ interface ProfileAvatarProps {
   size?: "sm" | "md" | "lg";
 }
 
+// This type extends the existing profile type to include the new fields
+interface ProfileWithAvatar {
+  id: string;
+  full_name?: string | null;
+  phone_number?: string | null;
+  updated_at?: string;
+  created_at?: string;
+  avatar_url?: string | null;
+  address?: string | null;
+  bio?: string | null;
+}
+
 export const ProfileAvatar = ({
   userId,
   avatarUrl,
@@ -64,10 +76,10 @@ export const ProfileAvatar = ({
         .from('avatars')
         .getPublicUrl(fileName);
         
-      // Update the user's profile
+      // Update the user's profile with typecasting to avoid type errors
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: publicUrl } as unknown as ProfileWithAvatar)
         .eq('id', userId);
         
       if (updateError) {

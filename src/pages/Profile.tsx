@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -13,16 +14,30 @@ import { toast } from "sonner";
 import { Loader2, LogOut, ShoppingBag, UserRound, Mail, Phone, MapPin, Lock } from "lucide-react";
 import { useOrders, OrderItem } from "@/contexts/OrderContext";
 import { formatDistanceToNow } from "date-fns";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+
+// Extended profile type to include the new fields
+interface ExtendedProfile {
+  id: string;
+  full_name: string | null;
+  phone_number: string | null;
+  updated_at: string;
+  created_at: string;
+  address: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+}
 
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -45,18 +60,21 @@ const Profile = () => {
         setUser(user);
         
         // Get user profile
-        const { data: profile, error } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .single();
           
-        if (profile) {
-          setProfile(profile);
-          setFullName(profile.full_name || "");
-          setPhoneNumber(profile.phone_number || "");
-          setAddress(profile.address || "");
-          setBio(profile.bio || "");
+        if (data) {
+          // Cast to extended profile type
+          const extendedProfile = data as unknown as ExtendedProfile;
+          setProfile(extendedProfile);
+          setFullName(extendedProfile.full_name || "");
+          setPhoneNumber(extendedProfile.phone_number || "");
+          setAddress(extendedProfile.address || "");
+          setBio(extendedProfile.bio || "");
+          setAvatarUrl(extendedProfile.avatar_url || null);
         } else if (error && error.code !== "PGRST116") {
           console.error("Error fetching profile:", error);
           toast.error("Failed to load profile data");
@@ -85,6 +103,10 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarUpdate = (url: string) => {
+    setAvatarUrl(url);
+  };
+
   const handleSaveProfile = async () => {
     try {
       setIsSaving(true);
@@ -98,7 +120,7 @@ const Profile = () => {
           address: address,
           bio: bio,
           updated_at: new Date().toISOString(),
-        });
+        } as unknown as ExtendedProfile);
         
       if (error) throw error;
       
@@ -213,26 +235,13 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex justify-center mb-6">
-                  <div className="relative">
-                    <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-primary">
-                      {profile?.avatar_url ? (
-                        <img 
-                          src={profile.avatar_url} 
-                          alt={fullName || "User"} 
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <UserRound className="h-12 w-12 text-gray-400" />
-                      )}
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="absolute bottom-0 right-0 rounded-full h-8 w-8 p-0"
-                    >
-                      <span className="sr-only">Change avatar</span>
-                      +
-                    </Button>
-                  </div>
+                  <ProfileAvatar 
+                    userId={user?.id} 
+                    avatarUrl={avatarUrl} 
+                    fullName={fullName}
+                    onAvatarUpdate={handleAvatarUpdate}
+                    size="md"
+                  />
                 </div>
                 
                 <div className="grid gap-6 md:grid-cols-2">
