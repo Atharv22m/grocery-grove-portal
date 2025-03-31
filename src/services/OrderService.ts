@@ -1,6 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { OrderType, OrderItem } from "@/contexts/OrderContext";
+import { createClient } from '@supabase/supabase-js';
+import { DatabaseExtended } from "@/types/supabase-extended";
+
+// Create a supabase client that uses our extended database type
+const supabaseExtended = createClient<DatabaseExtended>(
+  process.env.SUPABASE_URL || "https://jtjlxhyythzegigsrqnw.supabase.co",
+  process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0amx4aHl5dGh6ZWdpZ3NycW53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2OTUwNzQsImV4cCI6MjA1NDI3MTA3NH0.fL_4jJdOI_E3xNJK1YXk3DIKIzAlY01sKMUm19KPPEE"
+);
 
 export const OrderService = {
   async createOrder(order: {
@@ -21,7 +29,7 @@ export const OrderService = {
   }): Promise<OrderType | null> {
     try {
       // Generate a unique ID for the order (let Supabase handle this)
-      const { data: orderData, error: orderError } = await supabase
+      const { data: orderData, error: orderError } = await supabaseExtended
         .from("orders")
         .insert({
           user_id: order.userId,
@@ -44,14 +52,14 @@ export const OrderService = {
         name: item.name
       }));
 
-      const { error: itemsError } = await supabase
+      const { error: itemsError } = await supabaseExtended
         .from("order_items")
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
 
       // Insert delivery info
-      const { error: deliveryError } = await supabase
+      const { error: deliveryError } = await supabaseExtended
         .from("order_delivery_info")
         .insert({
           order_id: orderId,
@@ -66,7 +74,7 @@ export const OrderService = {
       if (deliveryError) throw deliveryError;
 
       // Insert payment info
-      const { error: paymentError } = await supabase
+      const { error: paymentError } = await supabaseExtended
         .from("order_payment_info")
         .insert({
           order_id: orderId,
@@ -105,7 +113,7 @@ export const OrderService = {
   async fetchUserOrders(userId: string): Promise<OrderType[]> {
     try {
       // Fetch orders
-      const { data: orders, error: ordersError } = await supabase
+      const { data: orders, error: ordersError } = await supabaseExtended
         .from("orders")
         .select("*")
         .eq("user_id", userId)
@@ -117,7 +125,7 @@ export const OrderService = {
       // For each order, fetch items, delivery info, and payment info
       const orderDetailsPromises = orders.map(async (order) => {
         // Fetch order items
-        const { data: items, error: itemsError } = await supabase
+        const { data: items, error: itemsError } = await supabaseExtended
           .from("order_items")
           .select("*")
           .eq("order_id", order.id);
@@ -125,7 +133,7 @@ export const OrderService = {
         if (itemsError) throw itemsError;
 
         // Fetch delivery info
-        const { data: deliveryInfo, error: deliveryError } = await supabase
+        const { data: deliveryInfo, error: deliveryError } = await supabaseExtended
           .from("order_delivery_info")
           .select("*")
           .eq("order_id", order.id)
@@ -134,7 +142,7 @@ export const OrderService = {
         if (deliveryError) throw deliveryError;
 
         // Fetch payment info
-        const { data: paymentInfo, error: paymentError } = await supabase
+        const { data: paymentInfo, error: paymentError } = await supabaseExtended
           .from("order_payment_info")
           .select("*")
           .eq("order_id", order.id)
