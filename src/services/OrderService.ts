@@ -10,6 +10,14 @@ const supabaseExtended = createClient<DatabaseExtended>(
   process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0amx4aHl5dGh6ZWdpZ3NycW53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2OTUwNzQsImV4cCI6MjA1NDI3MTA3NH0.fL_4jJdOI_E3xNJK1YXk3DIKIzAlY01sKMUm19KPPEE"
 );
 
+// Helper function to ensure status is one of the valid status types
+const validateOrderStatus = (status: string): OrderType['status'] => {
+  const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
+  return validStatuses.includes(status as any) 
+    ? status as OrderType['status']
+    : 'pending'; // Default to pending if invalid status
+};
+
 export const OrderService = {
   async createOrder(order: {
     userId: string;
@@ -150,6 +158,9 @@ export const OrderService = {
 
         if (paymentError) throw paymentError;
 
+        // Validate the status to ensure it matches the union type
+        const validatedStatus = validateOrderStatus(order.status);
+
         // Construct and return the order object
         return {
           id: order.id,
@@ -172,7 +183,7 @@ export const OrderService = {
             method: paymentInfo?.method || "",
             total: paymentInfo?.total || 0
           },
-          status: order.status,
+          status: validatedStatus,
           created_at: order.created_at
         };
       });
