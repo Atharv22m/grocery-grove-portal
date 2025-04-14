@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem } from "@/types/cart";
 import { products } from "@/components/FeaturedProducts";
@@ -51,7 +50,6 @@ export const addItemToCart = async (productId: string, quantity: number = 1): Pr
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    // Handle local cart
     const localCart = localStorage.getItem('cart');
     let cartItems: CartItem[] = localCart ? JSON.parse(localCart) : [];
     
@@ -85,7 +83,6 @@ export const addItemToCart = async (productId: string, quantity: number = 1): Pr
     return;
   }
 
-  // Handle database cart
   const { error } = await supabase
     .from("cart_items")
     .upsert({
@@ -104,7 +101,6 @@ export const removeItemFromCart = async (cartItemId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    // Handle local cart
     const localCart = localStorage.getItem('cart');
     if (localCart) {
       const cartItems: CartItem[] = JSON.parse(localCart);
@@ -114,7 +110,6 @@ export const removeItemFromCart = async (cartItemId: string): Promise<void> => {
     return;
   }
   
-  // Handle database cart
   const { error } = await supabase
     .from("cart_items")
     .delete()
@@ -127,7 +122,6 @@ export const updateItemQuantity = async (cartItemId: string, quantity: number): 
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    // Handle local cart
     const localCart = localStorage.getItem('cart');
     if (localCart) {
       const cartItems: CartItem[] = JSON.parse(localCart);
@@ -139,11 +133,26 @@ export const updateItemQuantity = async (cartItemId: string, quantity: number): 
     return;
   }
   
-  // Handle database cart
   const { error } = await supabase
     .from("cart_items")
     .update({ quantity })
     .eq("id", cartItemId);
+
+  if (error) throw error;
+};
+
+export const clearAllCartItems = async (): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    localStorage.removeItem('cart');
+    return;
+  }
+  
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .eq("user_id", user.id);
 
   if (error) throw error;
 };

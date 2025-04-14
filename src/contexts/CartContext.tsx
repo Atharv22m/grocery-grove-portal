@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { CartItem, CartContextType } from "@/types/cart";
-import { fetchCartItems, addItemToCart, removeItemFromCart, updateItemQuantity } from "@/services/CartService";
+import { fetchCartItems, addItemToCart, removeItemFromCart, updateItemQuantity, clearAllCartItems } from "@/services/CartService";
 import { toast } from "sonner";
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -61,8 +60,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const clearCart = async () => {
+    try {
+      setIsLoading(true);
+      await clearAllCartItems();
+      setCartItems([]);
+      toast.success("Cart cleared successfully");
+    } catch (error: any) {
+      console.error("Error clearing cart:", error);
+      toast.error("Failed to clear cart");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, isLoading }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, isLoading }}>
       {children}
     </CartContext.Provider>
   );
