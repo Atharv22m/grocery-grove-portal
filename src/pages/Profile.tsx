@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -15,8 +14,9 @@ import { Loader2, LogOut, ShoppingBag, UserRound, Mail, Phone, MapPin, Lock } fr
 import { useOrders, OrderItem } from "@/contexts/OrderContext";
 import { formatDistanceToNow } from "date-fns";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { ProfileService } from "@/services/ProfileService";
+import { useUserRole } from "@/contexts/UserRoleContext";
 
-// Extended profile type to include the new fields
 interface ExtendedProfile {
   id: string;
   full_name: string | null;
@@ -45,11 +45,11 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const { orders, isLoading: isLoadingOrders, fetchOrders } = useOrders();
+  const { userRole, hasPermission } = useUserRole();
 
   useEffect(() => {
-    const fetchUserAndProfile = async () => {
+    const fetchProfileData = async () => {
       try {
-        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
@@ -59,28 +59,20 @@ const Profile = () => {
         
         setUser(user);
         
-        // Get user profile
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+        const profileData = await ProfileService.getProfile(user.id);
           
-        if (data) {
-          // Cast to extended profile type
-          const extendedProfile = data as unknown as ExtendedProfile;
-          setProfile(extendedProfile);
-          setFullName(extendedProfile.full_name || "");
-          setPhoneNumber(extendedProfile.phone_number || "");
-          setAddress(extendedProfile.address || "");
-          setBio(extendedProfile.bio || "");
-          setAvatarUrl(extendedProfile.avatar_url || null);
-        } else if (error && error.code !== "PGRST116") {
-          console.error("Error fetching profile:", error);
+        if (profileData) {
+          setProfile(profileData);
+          setFullName(profileData.full_name || "");
+          setPhoneNumber(profileData.phone_number || "");
+          setAddress(profileData.address || "");
+          setBio(profileData.bio || "");
+          setAvatarUrl(profileData.avatar_url || null);
+        } else {
+          console.error("Error fetching profile: Profile not found");
           toast.error("Failed to load profile data");
         }
         
-        // Fetch the user's orders
         fetchOrders();
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -89,7 +81,7 @@ const Profile = () => {
       }
     };
     
-    fetchUserAndProfile();
+    fetchProfileData();
   }, [navigate, fetchOrders]);
 
   const handleSignOut = async () => {
@@ -111,65 +103,23 @@ const Profile = () => {
     try {
       setIsSaving(true);
       
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          full_name: fullName,
-          phone_number: phoneNumber,
-          address: address,
-          bio: bio,
-          updated_at: new Date().toISOString(),
-        } as unknown as ExtendedProfile);
+      const success = await ProfileService.updateProfile({
+        id: user.id,
+        full_name: fullName,
+        phone_number: phoneNumber,
+        address: address,
+        bio: bio,
+        updated_at: new Date().toISOString(),
+      });
         
-      if (error) throw error;
-      
-      toast.success("Profile updated successfully");
+      if (success) {
+        toast.success("Profile updated successfully");
+      }
     } catch (error: any) {
       console.error("Save profile error:", error);
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handlePasswordChange = async () => {
-    try {
-      setIsChangingPassword(true);
-      setPasswordError("");
-      
-      // Basic validation
-      if (!currentPassword) {
-        setPasswordError("Current password is required");
-        return;
-      }
-      
-      if (newPassword.length < 8) {
-        setPasswordError("New password must be at least 8 characters");
-        return;
-      }
-      
-      if (newPassword !== confirmPassword) {
-        setPasswordError("Passwords do not match");
-        return;
-      }
-      
-      // Update the password
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Password updated successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error: any) {
-      console.error("Password change error:", error);
-      setPasswordError(error.message || "Failed to update password");
-    } finally {
-      setIsChangingPassword(false);
     }
   };
 
@@ -206,7 +156,14 @@ const Profile = () => {
       <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-16">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Account</h1>
+          <div>
+            <h1 className="text-3xl font-bold">My Account</h1>
+            {userRole && (
+              <p className="text-gray-500 mt-1">
+                Role: {userRole.name.charAt(0).toUpperCase() + userRole.name.slice(1)}
+              </p>
+            )}
+          </div>
           <Button 
             variant="outline" 
             className="flex items-center gap-2"
@@ -223,6 +180,7 @@ const Profile = () => {
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="orders">Order History</TabsTrigger>
             <TabsTrigger value="addresses">Addresses</TabsTrigger>
+            <TabsTrigger value="settings">Account Settings</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile">
@@ -540,6 +498,20 @@ const Profile = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="settings">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <AccountSettings 
+                userId={user?.id} 
+                profile={profile}
+                onProfileUpdated={fetchProfileData}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </main>

@@ -15,6 +15,7 @@ import { Toaster } from "sonner";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { OrderProvider } from "@/contexts/OrderContext";
+import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 function App() {
@@ -23,23 +24,25 @@ function App() {
       <CartProvider>
         <WishlistProvider>
           <OrderProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/new" element={<ProductForm />} />
-                <Route path="/products/edit/:id" element={<ProductForm />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/order-confirmation" element={<OrderConfirmation />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </Router>
+            <UserRoleProvider>
+              <Router>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/new" element={<ProductForm />} />
+                  <Route path="/products/edit/:id" element={<ProductForm />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+              </Router>
+            </UserRoleProvider>
           </OrderProvider>
         </WishlistProvider>
       </CartProvider>

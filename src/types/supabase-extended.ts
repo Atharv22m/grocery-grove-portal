@@ -117,6 +117,15 @@ export interface DatabaseExtended {
           updated_at: string;
           username: string;
           website: string;
+          address: string;
+          bio: string;
+          phone_number: string;
+          role_id: string;
+          preferences: Record<string, any>;
+          metadata: Record<string, any>;
+          account_status: string;
+          last_login_at: string;
+          account_settings: Record<string, any>;
         };
         Insert: {
           avatar_url?: string;
@@ -125,6 +134,15 @@ export interface DatabaseExtended {
           updated_at?: string;
           username: string;
           website?: string;
+          address?: string;
+          bio?: string;
+          phone_number?: string;
+          role_id?: string;
+          preferences?: Record<string, any>;
+          metadata?: Record<string, any>;
+          account_status?: string;
+          last_login_at?: string;
+          account_settings?: Record<string, any>;
         };
         Update: {
           avatar_url?: string;
@@ -133,12 +151,85 @@ export interface DatabaseExtended {
           updated_at?: string;
           username?: string;
           website?: string;
+          address?: string;
+          bio?: string;
+          phone_number?: string;
+          role_id?: string;
+          preferences?: Record<string, any>;
+          metadata?: Record<string, any>;
+          account_status?: string;
+          last_login_at?: string;
+          account_settings?: Record<string, any>;
         };
         Relationships: [
           {
             foreignKeyName: "profiles_id_fkey";
             columns: ["id"];
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "profiles_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "user_roles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      user_roles: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          permissions: Record<string, boolean>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          permissions?: Record<string, boolean>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          permissions?: Record<string, boolean>;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_role_mappings: {
+        Row: {
+          id: string;
+          user_id: string;
+          role_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          role_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          role_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_role_mappings_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_role_mappings_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "user_roles";
             referencedColumns: ["id"];
           }
         ];
@@ -287,7 +378,21 @@ export interface DatabaseExtended {
       };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      get_user_permissions: {
+        Args: {
+          user_id: string;
+        };
+        Returns: Record<string, boolean>;
+      };
+      has_permission: {
+        Args: {
+          user_id: string;
+          permission: string;
+        };
+        Returns: boolean;
+      };
+    };
     Enums: {};
     CompositeTypes: {};
   };

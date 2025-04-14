@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -99,15 +98,29 @@ export const AuthForm = () => {
         throw error;
       }
       
-      // Create a profile entry
+      // Create a profile entry with customer role
       if (data.user) {
+        // First get the customer role id
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("name", "customer")
+          .single();
+        
+        const customerRoleId = roleData?.id;
+        
+        // Then create the profile
         const { error: profileError } = await supabase
           .from("profiles")
           .insert({
             id: data.user.id,
             full_name: values.fullName,
+            role_id: customerRoleId,
+            account_status: 'active',
+            preferences: { emailFrequency: 'weekly' },
+            account_settings: { notifications: true, marketing: false }
           });
-          
+        
         if (profileError) console.error("Failed to create profile:", profileError);
       }
 
