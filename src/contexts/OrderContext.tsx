@@ -1,89 +1,24 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
+import { Order, OrderContextType, OrderStatus } from "@/types/order";
+import { 
+  createOrder as createOrderService, 
+  getOrderById as getOrderByIdService,
+  getUserOrders as getUserOrdersService, 
+  updateOrderStatus as updateOrderStatusService,
+  cancelOrder as cancelOrderService
+} from "@/services/OrderService";
+import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useCart } from "./CartContext";
-import { OrderService } from "@/services/OrderService";
-
-export type OrderItem = {
-  product_id: string;
-  quantity: number;
-  price: number;
-  name: string;
-};
-
-export type OrderType = {
-  id: string;
-  user_id: string;
-  items: OrderItem[];
-  delivery_info: {
-    fullName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    phoneNumber: string;
-  };
-  payment_info: {
-    method: string;
-    total: number;
-  };
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  created_at: string;
-};
-
-type OrderContextType = {
-  orders: OrderType[];
-  isLoading: boolean;
-  createOrder: (orderData: {
-    delivery: {
-      fullName: string;
-      address: string;
-      city: string;
-      state: string;
-      zipCode: string;
-      phoneNumber: string;
-    };
-    payment: {
-      method: string;
-      total: number;
-    };
-  }) => Promise<OrderType | null>;
-  fetchOrders: () => Promise<void>;
-};
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
-// For local storage persistence
-const ORDERS_STORAGE_KEY = "grocery_app_orders";
-
-export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
-  const [orders, setOrders] = useState<OrderType[]>([]);
+export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { cartItems, removeFromCart } = useCart();
-
-  // Fetch orders when the user logs in
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        fetchOrders();
-      } else if (event === 'SIGNED_OUT') {
-        setOrders([]);
-      }
-    });
-
-    // Initial fetch
-    fetchOrders();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Helper to save orders to localStorage (for non-logged in users)
-  const saveOrdersToStorage = (ordersList: OrderType[]) => {
-    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(ordersList));
-  };
+  const { cartItems, clearCart } = useCart();
 
   const createOrder = async (orderData: {
     delivery: {
@@ -98,9 +33,10 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       method: string;
       total: number;
     };
-  }): Promise<OrderType | null> => {
+  }) => {
     try {
       setIsLoading(true);
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -108,81 +44,147 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
       
-      const items = cartItems.map(item => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.product.price,
-        name: item.product.name
-      }));
+      const order = await createOrderService(
+        user.id, 
+        cartItems, 
+        orderData.delivery, 
+        orderData.payment
+      );
       
-      if (items.length === 0) {
-        toast.error("Your cart is empty");
+      if (order) {
+        await clearCart();
+        setCurrentOrder(order);
+        toast.success("Order placed successfully!");
+        return order;
+      } else {
+        toast.error("Failed to place order");
         return null;
       }
-      
-      // Create the order using our service
-      const newOrder = await OrderService.createOrder({
-        userId: user.id,
-        items,
-        deliveryInfo: orderData.delivery,
-        paymentInfo: orderData.payment
-      });
-      
-      if (!newOrder) {
-        throw new Error("Failed to create order");
-      }
-      
-      // Update local state
-      setOrders(prev => [newOrder, ...prev]);
-      
-      // Clear cart after successful order
-      for (const item of cartItems) {
-        await removeFromCart(item.id);
-      }
-      
-      toast.success("Order placed successfully");
-      return newOrder;
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating order:", error);
-      toast.error("Failed to place order: " + error.message);
+      toast.error("An error occurred while placing your order");
       return null;
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const fetchOrders = async () => {
+
+  const getOrderById = async (orderId: string) => {
     try {
       setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        // Not logged in, try to get orders from local storage
-        const savedOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
-        if (savedOrders) {
-          setOrders(JSON.parse(savedOrders));
-        }
-        return;
+      const order = await getOrderByIdService(orderId);
+      if (order) {
+        setCurrentOrder(order);
       }
-      
-      // Fetch orders using our service
-      const userOrders = await OrderService.fetchUserOrders(user.id);
-      setOrders(userOrders);
-    } catch (error: any) {
-      console.error("Error fetching orders:", error);
-      toast.error("Failed to fetch orders: " + error.message);
+      return order;
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      toast.error("Failed to fetch order details");
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
-  
+
+  const getUserOrders = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return [];
+      }
+      
+      const userOrders = await getUserOrdersService(user.id);
+      setOrders(userOrders);
+      return userOrders;
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to fetch orders");
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
+    try {
+      setIsLoading(true);
+      const success = await updateOrderStatusService(orderId, status);
+      
+      if (success) {
+        // Update the orders state
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === orderId ? { ...order, status } : order
+          )
+        );
+        
+        // Update current order if it's the one being modified
+        if (currentOrder && currentOrder.id === orderId) {
+          setCurrentOrder({ ...currentOrder, status });
+        }
+        
+        toast.success(`Order status updated to ${status}`);
+        return true;
+      } else {
+        toast.error("Failed to update order status");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast.error("An error occurred while updating order status");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    try {
+      setIsLoading(true);
+      const success = await cancelOrderService(orderId);
+      
+      if (success) {
+        // Update the orders state
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === orderId ? { ...order, status: "cancelled" as OrderStatus } : order
+          )
+        );
+        
+        // Update current order if it's the one being cancelled
+        if (currentOrder && currentOrder.id === orderId) {
+          setCurrentOrder({ ...currentOrder, status: "cancelled" as OrderStatus });
+        }
+        
+        toast.success("Order cancelled successfully");
+        return true;
+      } else {
+        toast.error("Failed to cancel order");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      toast.error("An error occurred while cancelling the order");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <OrderContext.Provider
-      value={{
-        orders,
-        isLoading,
-        createOrder,
-        fetchOrders
+    <OrderContext.Provider 
+      value={{ 
+        orders, 
+        currentOrder, 
+        isLoading, 
+        createOrder, 
+        getOrderById, 
+        getUserOrders,
+        updateOrderStatus,
+        cancelOrder
       }}
     >
       {children}

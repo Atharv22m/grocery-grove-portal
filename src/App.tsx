@@ -9,6 +9,8 @@ import ProductDetail from "@/pages/ProductDetail";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
+import Orders from "@/pages/Orders";
+import OrderDetail from "@/pages/OrderDetail";
 import Wishlist from "@/pages/Wishlist";
 import NotFound from "@/pages/NotFound";
 import { Toaster } from "sonner";
@@ -37,6 +39,8 @@ function App() {
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/order/:id" element={<OrderDetail />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -1,196 +1,160 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { OrderType, OrderItem } from "@/contexts/OrderContext";
-import { createClient } from '@supabase/supabase-js';
-import { DatabaseExtended } from "@/types/supabase-extended";
+import { Order, OrderStatus } from "@/types/order";
+import { CartItem } from "@/types/cart";
 
-// Create a supabase client that uses our extended database type
-const supabaseExtended = createClient<DatabaseExtended>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+export const createOrder = async (
+  userId: string,
+  cartItems: CartItem[],
+  deliveryInfo: {
+    fullName: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    phoneNumber: string;
+  },
+  paymentInfo: {
+    method: string;
+    total: number;
+  }
+): Promise<Order | null> => {
+  try {
+    // Create the order
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        user_id: userId,
+        status: "pending" as OrderStatus,
+        delivery_address: deliveryInfo,
+        payment: paymentInfo,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-// Helper function to ensure status is one of the valid status types
-const validateOrderStatus = (status: string): OrderType['status'] => {
-  const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
-  return validStatuses.includes(status as any) 
-    ? status as OrderType['status']
-    : 'pending'; // Default to pending if invalid status
+    if (orderError) throw orderError;
+
+    // Create order items
+    const orderItems = cartItems.map((item) => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems);
+
+    if (itemsError) throw itemsError;
+
+    return order;
+  } catch (error) {
+    console.error("Error creating order:", error);
+    return null;
+  }
 };
 
-export const OrderService = {
-  async createOrder(order: {
-    userId: string;
-    items: OrderItem[];
-    deliveryInfo: {
-      fullName: string;
-      address: string;
-      city: string;
-      state: string;
-      zipCode: string;
-      phoneNumber: string;
-    };
-    paymentInfo: {
-      method: string;
-      total: number;
-    };
-  }): Promise<OrderType | null> {
-    try {
-      // Generate a unique ID for the order (let Supabase handle this)
-      const { data: orderData, error: orderError } = await supabaseExtended
-        .from("orders")
-        .insert({
-          user_id: order.userId,
-          status: "pending"
-        })
-        .select()
-        .single();
+export const getOrderById = async (orderId: string): Promise<Order | null> => {
+  try {
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .single();
 
-      if (orderError) throw orderError;
-      if (!orderData) throw new Error("Failed to create order");
-      
-      const orderId = orderData.id;
+    if (error) throw error;
+    return order;
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    return null;
+  }
+};
 
-      // Insert order items
-      const orderItems = order.items.map((item) => ({
-        order_id: orderId,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.price,
-        name: item.name
-      }));
+export const getUserOrders = async (userId: string): Promise<Order[]> => {
+  try {
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-      const { error: itemsError } = await supabaseExtended
-        .from("order_items")
-        .insert(orderItems);
+    if (error) throw error;
+    return orders || [];
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    return [];
+  }
+};
 
-      if (itemsError) throw itemsError;
+export const updateOrderStatus = async (
+  orderId: string, 
+  status: OrderStatus
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId);
 
-      // Insert delivery info
-      const { error: deliveryError } = await supabaseExtended
-        .from("order_delivery_info")
-        .insert({
-          order_id: orderId,
-          full_name: order.deliveryInfo.fullName,
-          address: order.deliveryInfo.address,
-          city: order.deliveryInfo.city,
-          state: order.deliveryInfo.state,
-          zip_code: order.deliveryInfo.zipCode,
-          phone_number: order.deliveryInfo.phoneNumber
-        });
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    return false;
+  }
+};
 
-      if (deliveryError) throw deliveryError;
+export const cancelOrder = async (orderId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "cancelled" as OrderStatus })
+      .eq("id", orderId);
 
-      // Insert payment info
-      const { error: paymentError } = await supabaseExtended
-        .from("order_payment_info")
-        .insert({
-          order_id: orderId,
-          method: order.paymentInfo.method,
-          total: order.paymentInfo.total
-        });
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    return false;
+  }
+};
 
-      if (paymentError) throw paymentError;
+export const getOrderItems = async (orderId: string) => {
+  try {
+    const { data: orderItems, error } = await supabase
+      .from("order_items")
+      .select(`
+        id,
+        order_id,
+        product_id,
+        quantity,
+        price,
+        products (
+          name,
+          image_url,
+          unit
+        )
+      `)
+      .eq("order_id", orderId);
 
-      // Return the complete order object
-      return {
-        id: orderId,
-        user_id: order.userId,
-        items: order.items,
-        delivery_info: {
-          fullName: order.deliveryInfo.fullName,
-          address: order.deliveryInfo.address,
-          city: order.deliveryInfo.city,
-          state: order.deliveryInfo.state,
-          zipCode: order.deliveryInfo.zipCode,
-          phoneNumber: order.deliveryInfo.phoneNumber
-        },
-        payment_info: {
-          method: order.paymentInfo.method,
-          total: order.paymentInfo.total
-        },
-        status: "pending",
-        created_at: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error("Error creating order:", error);
-      return null;
-    }
-  },
-
-  async fetchUserOrders(userId: string): Promise<OrderType[]> {
-    try {
-      // Fetch orders
-      const { data: orders, error: ordersError } = await supabaseExtended
-        .from("orders")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (ordersError) throw ordersError;
-      if (!orders) return [];
-
-      // For each order, fetch items, delivery info, and payment info
-      const orderDetailsPromises = orders.map(async (order) => {
-        // Fetch order items
-        const { data: items, error: itemsError } = await supabaseExtended
-          .from("order_items")
-          .select("*")
-          .eq("order_id", order.id);
-
-        if (itemsError) throw itemsError;
-
-        // Fetch delivery info
-        const { data: deliveryInfo, error: deliveryError } = await supabaseExtended
-          .from("order_delivery_info")
-          .select("*")
-          .eq("order_id", order.id)
-          .single();
-
-        if (deliveryError) throw deliveryError;
-
-        // Fetch payment info
-        const { data: paymentInfo, error: paymentError } = await supabaseExtended
-          .from("order_payment_info")
-          .select("*")
-          .eq("order_id", order.id)
-          .single();
-
-        if (paymentError) throw paymentError;
-
-        // Validate the status to ensure it matches the union type
-        const validatedStatus = validateOrderStatus(order.status);
-
-        // Construct and return the order object
-        return {
-          id: order.id,
-          user_id: order.user_id,
-          items: items?.map(item => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            name: item.name
-          })) || [],
-          delivery_info: {
-            fullName: deliveryInfo?.full_name || "",
-            address: deliveryInfo?.address || "",
-            city: deliveryInfo?.city || "",
-            state: deliveryInfo?.state || "",
-            zipCode: deliveryInfo?.zip_code || "",
-            phoneNumber: deliveryInfo?.phone_number || ""
-          },
-          payment_info: {
-            method: paymentInfo?.method || "",
-            total: paymentInfo?.total || 0
-          },
-          status: validatedStatus,
-          created_at: order.created_at
-        };
-      });
-
-      return Promise.all(orderDetailsPromises);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      return [];
-    }
+    if (error) throw error;
+    
+    return orderItems.map(item => ({
+      id: item.id,
+      order_id: item.order_id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.price,
+      product: {
+        name: item.products.name,
+        image: item.products.image_url || 'https://placehold.co/200x200?text=Product',
+        unit: item.products.unit
+      }
+    }));
+  } catch (error) {
+    console.error("Error fetching order items:", error);
+    return [];
   }
 };
