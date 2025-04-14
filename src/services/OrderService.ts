@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { OrderType, OrderItem } from "@/contexts/OrderContext";
 import { createClient } from '@supabase/supabase-js';
@@ -6,8 +5,8 @@ import { DatabaseExtended } from "@/types/supabase-extended";
 
 // Create a supabase client that uses our extended database type
 const supabaseExtended = createClient<DatabaseExtended>(
-  import.meta.env.VITE_SUPABASE_URL || "https://jtjlxhyythzegigsrqnw.supabase.co",
-  import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0amx4aHl5dGh6ZWdpZ3NycW53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg2OTUwNzQsImV4cCI6MjA1NDI3MTA3NH0.fL_4jJdOI_E3xNJK1YXk3DIKIzAlY01sKMUm19KPPEE"
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
 // Helper function to ensure status is one of the valid status types
