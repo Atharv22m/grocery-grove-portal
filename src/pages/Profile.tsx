@@ -14,19 +14,9 @@ import { Loader2, LogOut, ShoppingBag, UserRound, Mail, Phone, MapPin, Lock } fr
 import { useOrders, OrderItem } from "@/contexts/OrderContext";
 import { formatDistanceToNow } from "date-fns";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
-import { ProfileService } from "@/services/ProfileService";
+import { ProfileService, ExtendedProfile } from "@/services/ProfileService";
 import { useUserRole } from "@/contexts/UserRoleContext";
-
-interface ExtendedProfile {
-  id: string;
-  full_name: string | null;
-  phone_number: string | null;
-  updated_at: string;
-  created_at: string;
-  address: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-}
+import { AccountSettings } from "@/components/profile/AccountSettings";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -47,40 +37,73 @@ const Profile = () => {
   const { orders, isLoading: isLoadingOrders, fetchOrders } = useOrders();
   const { userRole, hasPermission } = useUserRole();
 
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          navigate("/auth");
-          return;
-        }
-        
-        setUser(user);
-        
-        const profileData = await ProfileService.getProfile(user.id);
-          
-        if (profileData) {
-          setProfile(profileData);
-          setFullName(profileData.full_name || "");
-          setPhoneNumber(profileData.phone_number || "");
-          setAddress(profileData.address || "");
-          setBio(profileData.bio || "");
-          setAvatarUrl(profileData.avatar_url || null);
-        } else {
-          console.error("Error fetching profile: Profile not found");
-          toast.error("Failed to load profile data");
-        }
-        
-        fetchOrders();
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
-      } finally {
-        setLoading(false);
+  const handlePasswordChange = async () => {
+    try {
+      setIsChangingPassword(true);
+      setPasswordError("");
+
+      if (newPassword !== confirmPassword) {
+        setPasswordError("New passwords do not match");
+        return;
       }
-    };
-    
+
+      if (newPassword.length < 8) {
+        setPasswordError("Password must be at least 8 characters");
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Password change error:", error);
+      setPasswordError(error.message || "Failed to update password");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const fetchProfileData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+      
+      setUser(user);
+      
+      const profileData = await ProfileService.getProfile(user.id);
+        
+      if (profileData) {
+        setProfile(profileData);
+        setFullName(profileData.full_name || "");
+        setPhoneNumber(profileData.phone_number || "");
+        setAddress(profileData.address || "");
+        setBio(profileData.bio || "");
+        setAvatarUrl(profileData.avatar_url || null);
+      } else {
+        console.error("Error fetching profile: Profile not found");
+        toast.error("Failed to load profile data");
+      }
+      
+      fetchOrders();
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProfileData();
   }, [navigate, fetchOrders]);
 

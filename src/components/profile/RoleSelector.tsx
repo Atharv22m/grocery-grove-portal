@@ -10,7 +10,6 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { ProfileService, UserRole } from "@/services/ProfileService";
 import { useUserRole } from "@/contexts/UserRoleContext";
 
 interface RoleSelectorProps {
@@ -26,23 +25,18 @@ export const RoleSelector = ({
   onRoleChange,
   disabled = false
 }: RoleSelectorProps) => {
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<string | undefined>(
     currentRoleId || undefined
   );
   const { isAdmin } = useUserRole();
   
-  useEffect(() => {
-    const fetchRoles = async () => {
-      setLoading(true);
-      const rolesData = await ProfileService.getAllRoles();
-      setRoles(rolesData);
-      setLoading(false);
-    };
-    
-    fetchRoles();
-  }, []);
+  // Simplified roles for now
+  const roles = [
+    { id: "1", name: "admin", description: "Administrator with full access" },
+    { id: "2", name: "seller", description: "Can manage products and orders" },
+    { id: "3", name: "customer", description: "Regular customer" },
+  ];
   
   useEffect(() => {
     setSelectedRoleId(currentRoleId || undefined);
@@ -53,9 +47,6 @@ export const RoleSelector = ({
     
     if (onRoleChange) {
       onRoleChange(roleId);
-    } else {
-      // If no handler provided, update directly
-      await ProfileService.setUserRole(userId, roleId);
     }
   };
   

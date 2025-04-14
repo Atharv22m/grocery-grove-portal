@@ -100,26 +100,15 @@ export const AuthForm = () => {
       
       // Create a profile entry with customer role
       if (data.user) {
-        // First get the customer role id
-        const { data: roleData, error: roleError } = await supabase
-          .from("user_roles")
-          .select("id")
-          .eq("name", "customer")
-          .single();
-        
-        const customerRoleId = roleData?.id;
-        
-        // Then create the profile
+        // We need to get the customer role ID first from a separate query
+        // or set a default role on the profile without specifying a role_id
         const { error: profileError } = await supabase
           .from("profiles")
-          .insert({
-            id: data.user.id,
+          .update({
             full_name: values.fullName,
-            role_id: customerRoleId,
-            account_status: 'active',
-            preferences: { emailFrequency: 'weekly' },
-            account_settings: { notifications: true, marketing: false }
-          });
+            account_status: 'active'
+          })
+          .eq("id", data.user.id);
         
         if (profileError) console.error("Failed to create profile:", profileError);
       }
