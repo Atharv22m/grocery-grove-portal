@@ -20,6 +20,7 @@ import { OrderProvider } from "@/contexts/OrderContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 function App() {
   return (
@@ -33,17 +34,49 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile" element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/products" element={<Products />} />
-                    <Route path="/products/new" element={<ProductForm />} />
-                    <Route path="/products/edit/:id" element={<ProductForm />} />
+                    <Route path="/products/new" element={
+                      <ProtectedRoute>
+                        <ProductForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/products/edit/:id" element={
+                      <ProtectedRoute>
+                        <ProductForm />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/order-confirmation" element={<OrderConfirmation />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/order/:id" element={<OrderDetail />} />
-                    <Route path="/wishlist" element={<Wishlist />} />
+                    <Route path="/checkout" element={
+                      <ProtectedRoute>
+                        <Checkout />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/order-confirmation" element={
+                      <ProtectedRoute>
+                        <OrderConfirmation />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/orders" element={
+                      <ProtectedRoute>
+                        <Orders />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/order/:id" element={
+                      <ProtectedRoute>
+                        <OrderDetail />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/wishlist" element={
+                      <ProtectedRoute>
+                        <Wishlist />
+                      </ProtectedRoute>
+                    } />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster />
