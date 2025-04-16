@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { useOrders } from "@/contexts/OrderContext";
-import { OrderStatus, OrderStatusBadge } from "@/components/OrderStatus";
+import { OrderStatusDisplay, OrderStatusBadge } from "@/components/OrderStatus";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Link, useNavigate } from "react-router-dom";

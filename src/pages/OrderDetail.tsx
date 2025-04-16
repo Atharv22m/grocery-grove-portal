@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ImageOff } from "lucide-react";
 import { useOrders } from "@/contexts/OrderContext";
-import { OrderStatus, OrderStatusTimeline, OrderStatusBadge } from "@/components/OrderStatus";
+import { OrderStatusDisplay, OrderStatusTimeline, OrderStatusBadge } from "@/components/OrderStatus";
 import { getOrderItems } from "@/services/OrderService";
 import { toast } from "sonner";
 
@@ -170,7 +170,7 @@ export default function OrderDetail() {
               </div>
               
               <div className="mb-6">
-                <OrderStatus status={currentOrder.status} createdAt={currentOrder.created_at} />
+                <OrderStatusDisplay status={currentOrder.status} createdAt={currentOrder.created_at} />
                 <OrderStatusTimeline order={currentOrder} />
               </div>
               
@@ -270,4 +270,4 @@ export default function OrderDetail() {
       </div>
     </div>
   );
-}
+};

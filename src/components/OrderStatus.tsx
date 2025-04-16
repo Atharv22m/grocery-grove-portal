@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Order, OrderStatus } from "@/types/order";
+import { Order, OrderStatus as OrderStatusType } from "@/types/order";
 import { cn } from "@/lib/utils";
 import { 
   Clock, 
@@ -11,12 +11,12 @@ import {
 } from "lucide-react";
 
 type OrderStatusProps = {
-  status: OrderStatus;
+  status: OrderStatusType;
   createdAt: string;
   className?: string;
 };
 
-export const OrderStatusBadge = ({ status, className }: { status: OrderStatus, className?: string }) => {
+export const OrderStatusBadge = ({ status, className }: { status: OrderStatusType, className?: string }) => {
   const getStatusColor = () => {
     switch (status) {
       case "pending":
@@ -62,7 +62,7 @@ export const OrderStatusBadge = ({ status, className }: { status: OrderStatus, c
   );
 };
 
-export const OrderStatus: React.FC<OrderStatusProps> = ({ 
+export const OrderStatusDisplay: React.FC<OrderStatusProps> = ({ 
   status, 
   createdAt,
   className
@@ -116,7 +116,7 @@ export const OrderStatusTimeline = ({ order }: { order: Order }) => {
     { status: "delivered", label: "Delivered", icon: <CheckCircle className="h-5 w-5" /> }
   ];
 
-  const getStatusIndex = (status: OrderStatus): number => {
+  const getStatusIndex = (status: OrderStatusType): number => {
     if (status === "cancelled") return -1;
     return steps.findIndex(step => step.status === status);
   };
@@ -168,4 +168,4 @@ export const OrderStatusTimeline = ({ order }: { order: Order }) => {
   );
 };
 
-export default OrderStatus;
+export default OrderStatusDisplay;

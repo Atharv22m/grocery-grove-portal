@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, ShoppingBag, Home } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { OrderStatus, OrderStatusTimeline } from "@/components/OrderStatus";
+import { OrderStatusDisplay, OrderStatusTimeline } from "@/components/OrderStatus";
 
 export default function OrderConfirmation() {
   const location = useLocation();
@@ -80,7 +81,7 @@ export default function OrderConfirmation() {
             <Separator className="mb-6" />
             
             <div className="mb-6">
-              <OrderStatus status="pending" createdAt={orderDate} />
+              <OrderStatusDisplay status="pending" createdAt={orderDate} />
               <OrderStatusTimeline order={{ 
                 id: orderNumber, 
                 user_id: "", 

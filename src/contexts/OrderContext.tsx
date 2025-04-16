@@ -6,11 +6,27 @@ import {
   getOrderById as getOrderByIdService,
   getUserOrders as getUserOrdersService, 
   updateOrderStatus as updateOrderStatusService,
-  cancelOrder as cancelOrderService
+  cancelOrder as cancelOrderService,
+  getOrderItems
 } from "@/services/OrderService";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Define OrderItem type
+export type OrderItem = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  name: string;
+  product?: {
+    name: string;
+    image: string;
+    unit?: string;
+  };
+};
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
@@ -108,6 +124,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Add this method to match what's used in Profile.tsx
+  const fetchOrders = async () => {
+    return await getUserOrders();
+  };
+
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     try {
       setIsLoading(true);
@@ -183,6 +204,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createOrder, 
         getOrderById, 
         getUserOrders,
+        fetchOrders, // Add the new method to the context
         updateOrderStatus,
         cancelOrder
       }}

@@ -6,6 +6,20 @@ export type OrderStatus =
   | "delivered" 
   | "cancelled";
 
+export type OrderItem = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  name: string;
+  product?: {
+    name: string;
+    image: string;
+    unit?: string;
+  };
+};
+
 export type Order = {
   id: string;
   user_id: string;
@@ -22,6 +36,12 @@ export type Order = {
   payment: {
     method: string;
     total: number;
+  };
+  // These properties are for backwards compatibility with Profile.tsx
+  items?: OrderItem[];
+  payment_info?: {
+    total: number;
+    method: string;
   };
 };
 
@@ -45,6 +65,7 @@ export type OrderContextType = {
   }) => Promise<Order | null>;
   getOrderById: (orderId: string) => Promise<Order | null>;
   getUserOrders: () => Promise<Order[]>;
+  fetchOrders: () => Promise<Order[]>; // Add this method to match what's used in Profile.tsx
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<boolean>;
   cancelOrder: (orderId: string) => Promise<boolean>;
 };
