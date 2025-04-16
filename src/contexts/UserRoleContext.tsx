@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserRole {
   id: string;
@@ -36,7 +36,7 @@ const UserRoleContext = createContext<UserRoleContextProps>({
 export const useUserRole = () => useContext(UserRoleContext);
 
 export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const { user, isLoading } = useAuth();
   const [userRole, setUserRoleState] = useState<UserRole | null>(null);
   const [permissions, setPermissions] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -47,8 +47,8 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Hardcoded roles for this simplified version
-  const isAdmin = user?.email === "admin@example.com"; // Simple check for admin
-  const isSeller = user?.email?.includes("seller");    // Simple check for seller
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === "admin@example.com"; // Simple check for admin
+  const isSeller = user?.primaryEmailAddress?.emailAddress?.includes("seller");    // Simple check for seller
   const isCustomer = user !== null && !isAdmin && !isSeller; // Everyone else is a customer
 
   // Simplified fetch user role data function
@@ -125,37 +125,16 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
 
   // Listen for auth changes
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      
-      if (data.user) {
-        await fetchUserRoleData(data.user.id);
+    if (!isLoading) {
+      if (user) {
+        fetchUserRoleData(user.id);
       } else {
         setUserRoleState(null);
         setPermissions({});
+        setLoading(false);
       }
-    };
-
-    fetchUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user || null);
-        
-        if (session?.user) {
-          await fetchUserRoleData(session.user.id);
-        } else {
-          setUserRoleState(null);
-          setPermissions({});
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+    }
+  }, [user, isLoading]);
 
   return (
     <UserRoleContext.Provider

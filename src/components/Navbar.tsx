@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ShoppingCart, Menu, X, User, LogOut, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -14,44 +14,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { UserButton } from "@clerk/clerk-react";
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
   const { wishlistItems } = useWishlist();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading, signOut, isSignedIn } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setLoading(true);
-        const { data } = await supabase.auth.getUser();
-        setUser(data.user);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut();
       toast.success("Signed out successfully");
       navigate("/");
     } catch (error) {
@@ -82,16 +56,19 @@ export const Navbar: React.FC = () => {
               Products
             </Link>
             
-            {loading ? (
+            {isLoading ? (
               <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
-            ) : user ? (
+            ) : isSignedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="max-w-[120px] truncate">
-                      {user.email?.split('@')[0]}
-                    </span>
+                    {user?.primaryEmailAddress?.emailAddress ? (
+                      <span className="max-w-[120px] truncate">
+                        {user.primaryEmailAddress.emailAddress.split('@')[0]}
+                      </span>
+                    ) : (
+                      <UserButton afterSignOutUrl="/" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -183,9 +160,9 @@ export const Navbar: React.FC = () => {
                 )}
               </Link>
               
-              {loading ? (
+              {isLoading ? (
                 <div className="h-8 w-24 rounded bg-gray-200 animate-pulse"></div>
-              ) : user ? (
+              ) : isSignedIn ? (
                 <>
                   <Link 
                     to="/profile" 
