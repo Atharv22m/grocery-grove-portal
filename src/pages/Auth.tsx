@@ -25,7 +25,7 @@ const Auth = () => {
   // Custom appearance to remove Clerk branding
   const appearance = {
     layout: {
-      logoPlacement: "none",
+      logoPlacement: "none" as const, // Fix: Use "as const" to ensure correct type
       showOptionalFields: true,
       socialButtonsPlacement: "bottom"
     },
