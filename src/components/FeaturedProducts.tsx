@@ -1,10 +1,10 @@
-
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ImageOff, ArrowUp, ArrowDown } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PRODUCT_IMAGES } from "@/utils/imageConstants";
 
 export const products = [
   {
@@ -13,7 +13,7 @@ export const products = [
     description: "Premium quality refined sunflower oil that's good for your health",
     price: 199,
     unit: "1L",
-    image: "/images/sunflower oil.jpeg",
+    image: PRODUCT_IMAGES["Fortune Sunlite Refined Sunflower Oil"],
     category: "Oils & Ghee",
     rating: 4.5,
     stock: 15,
@@ -25,7 +25,7 @@ export const products = [
     description: "Iodized salt for your cooking needs, with essential minerals",
     price: 25,
     unit: "1kg",
-    image: "/images/tata salt.jpeg",
+    image: PRODUCT_IMAGES["Tata Salt"],
     category: "Essentials",
     rating: 4.8,
     stock: 30,
@@ -37,7 +37,7 @@ export const products = [
     description: "Superior quality multigrain flour for healthy rotis and breads",
     price: 325,
     unit: "5kg",
-    image: "/images/aashirvaad atta.jpeg",
+    image: PRODUCT_IMAGES["Aashirvaad Atta with Multigrains"],
     category: "Flours & Grains",
     rating: 4.6,
     stock: 12,
@@ -49,7 +49,7 @@ export const products = [
     description: "Heart-healthy cooking oil with balanced fatty acids",
     price: 215,
     unit: "1L",
-    image: "/images/saffola oil.jpeg",
+    image: PRODUCT_IMAGES["Saffola Active Refined Oil"],
     category: "Oils & Ghee",
     rating: 4.4,
     stock: 18,
@@ -61,7 +61,7 @@ export const products = [
     description: "Quick and tasty instant noodles ready in 2 minutes",
     price: 72,
     unit: "pack of 6",
-    image: "/images/maggi.jpg",
+    image: PRODUCT_IMAGES["Maggi 2-Minute Noodles"],
     category: "Instant Foods",
     rating: 4.7,
     stock: 25,
@@ -73,7 +73,7 @@ export const products = [
     description: "Premium aged basmati rice with aromatic flavor",
     price: 299,
     unit: "1kg",
-    image: "/images/daawat basmati.jpg",
+    image: PRODUCT_IMAGES["Daawat Basmati Rice - Premium"],
     category: "Rice & Pulses",
     rating: 4.9,
     stock: 20,
@@ -85,7 +85,7 @@ export const products = [
     description: "Chocolate malt drink rich in essential vitamins and minerals",
     price: 245,
     unit: "500g",
-    image: "/images/bournvita.jpeg",
+    image: PRODUCT_IMAGES["Bournvita Health Drink"],
     category: "Beverages",
     rating: 4.3,
     stock: 14,
@@ -97,7 +97,7 @@ export const products = [
     description: "Natural tea with refreshing aroma and taste",
     price: 170,
     unit: "500g",
-    image: "/images/red label tea.jpg",
+    image: PRODUCT_IMAGES["Red Label Tea"],
     category: "Beverages",
     rating: 4.5,
     stock: 22,
