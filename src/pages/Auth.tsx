@@ -27,7 +27,7 @@ const Auth = () => {
     layout: {
       logoPlacement: "none" as const, // Fix: Use "as const" to ensure correct type
       showOptionalFields: true,
-      socialButtonsPlacement: "bottom"
+      socialButtonsPlacement: "bottom" as const // Fix: Use "as const" to ensure correct type
     },
     elements: {
       logoImage: {
