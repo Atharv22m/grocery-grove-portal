@@ -1,6 +1,6 @@
 
-import { createContext, useContext, ReactNode } from "react";
-import { useUser, useAuth as useClerkAuth } from "@clerk/clerk-react";
+import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { useUser, useAuth as useClerkAuth, useSession } from "@clerk/clerk-react";
 
 interface AuthContextProps {
   user: any;
@@ -21,13 +21,20 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerkAuth();
+  const { session } = useSession();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Update authentication state when user or session changes
+    setIsAuthenticated(!!user && !!session);
+  }, [user, session]);
   
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading: !isLoaded,
-        isSignedIn: !!user,
+        isSignedIn: isAuthenticated,
         signOut,
       }}
     >

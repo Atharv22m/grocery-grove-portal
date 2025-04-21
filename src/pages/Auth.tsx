@@ -2,7 +2,6 @@
 import { Navbar } from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { SignIn, SignUp } from "@clerk/clerk-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,32 +21,6 @@ const Auth = () => {
     setIsLoading(false);
   }, [isSignedIn, navigate]);
 
-  // Custom appearance to remove Clerk branding
-  const appearance = {
-    layout: {
-      logoPlacement: "none" as const, // Fix: Use "as const" to ensure correct type
-      showOptionalFields: true,
-      socialButtonsPlacement: "bottom" as const // Fix: Use "as const" to ensure correct type
-    },
-    elements: {
-      logoImage: {
-        display: "none"
-      },
-      footer: {
-        display: "none"
-      },
-      powerButton: {
-        display: "none"
-      },
-      dividerLine: {
-        display: "none"
-      },
-      dividerText: {
-        display: "none"
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -59,7 +32,7 @@ const Auth = () => {
         ) : (
           <div className="flex justify-center items-center">
             <div className="w-full max-w-md">
-              {/* Use Clerk components with custom appearance to hide branding */}
+              {/* Use custom AuthForm component instead of Clerk components */}
               <Tabs 
                 defaultValue="login"
                 value={activeTab} 
@@ -72,23 +45,11 @@ const Auth = () => {
                 </TabsList>
                 
                 <TabsContent value="login" className="rounded-md bg-white p-6 shadow-md">
-                  <SignIn 
-                    routing="path" 
-                    path="/auth" 
-                    signUpUrl="/auth"
-                    fallbackRedirectUrl="/"
-                    appearance={appearance}
-                  />
+                  <AuthForm />
                 </TabsContent>
                 
                 <TabsContent value="signup" className="rounded-md bg-white p-6 shadow-md">
-                  <SignUp 
-                    routing="path" 
-                    path="/auth" 
-                    signInUrl="/auth"
-                    fallbackRedirectUrl="/"
-                    appearance={appearance}
-                  />
+                  <AuthForm isSignUp={true} />
                 </TabsContent>
               </Tabs>
             </div>
