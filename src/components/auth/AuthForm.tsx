@@ -8,9 +8,8 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useAuth } from "@clerk/clerk-react";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
 
 // Schema for login form
 const loginSchema = z.object({
@@ -37,7 +36,8 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { isLoaded: signInLoaded, signIn } = useSignIn();
+  const { isLoaded: signUpLoaded, signUp } = useSignUp();
 
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -61,6 +61,11 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
 
   // Handle login submission
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
+    if (!signInLoaded) {
+      toast.error("Authentication service is not ready yet");
+      return;
+    }
+
     try {
       setIsLoading(true);
       
@@ -88,6 +93,11 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
 
   // Handle signup submission
   const onSignupSubmit = async (values: z.infer<typeof signupSchema>) => {
+    if (!signUpLoaded) {
+      toast.error("Authentication service is not ready yet");
+      return;
+    }
+
     try {
       setIsLoading(true);
       
