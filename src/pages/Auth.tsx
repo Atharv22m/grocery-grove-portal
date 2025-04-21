@@ -6,6 +6,7 @@ import { SignIn, SignUp } from "@clerk/clerk-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuthForm } from "@/components/auth/AuthForm";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -21,6 +22,32 @@ const Auth = () => {
     setIsLoading(false);
   }, [isSignedIn, navigate]);
 
+  // Custom appearance to remove Clerk branding
+  const appearance = {
+    layout: {
+      logoPlacement: "none",
+      showOptionalFields: true,
+      socialButtonsPlacement: "bottom"
+    },
+    elements: {
+      logoImage: {
+        display: "none"
+      },
+      footer: {
+        display: "none"
+      },
+      powerButton: {
+        display: "none"
+      },
+      dividerLine: {
+        display: "none"
+      },
+      dividerText: {
+        display: "none"
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -32,6 +59,7 @@ const Auth = () => {
         ) : (
           <div className="flex justify-center items-center">
             <div className="w-full max-w-md">
+              {/* Use Clerk components with custom appearance to hide branding */}
               <Tabs 
                 defaultValue="login"
                 value={activeTab} 
@@ -48,7 +76,8 @@ const Auth = () => {
                     routing="path" 
                     path="/auth" 
                     signUpUrl="/auth"
-                    afterSignInUrl="/"
+                    fallbackRedirectUrl="/"
+                    appearance={appearance}
                   />
                 </TabsContent>
                 
@@ -57,7 +86,8 @@ const Auth = () => {
                     routing="path" 
                     path="/auth" 
                     signInUrl="/auth"
-                    afterSignUpUrl="/"
+                    fallbackRedirectUrl="/"
+                    appearance={appearance}
                   />
                 </TabsContent>
               </Tabs>
