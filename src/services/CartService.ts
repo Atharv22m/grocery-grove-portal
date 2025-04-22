@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem } from "@/types/cart";
 import { products } from "@/components/FeaturedProducts";
@@ -39,8 +38,7 @@ export const fetchCartItems = async (): Promise<CartItem[]> => {
         name: item.products.name,
         price: item.products.price,
         image: item.products.image_url || 'https://placehold.co/200x200?text=Product',
-        // Don't try to access unit if it doesn't exist in the database query
-        unit: item.products?.unit || 'item'
+        unit: 'item'
       }
     }));
   } catch (error: any) {
