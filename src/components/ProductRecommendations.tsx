@@ -4,6 +4,7 @@ import { ProductType } from '@/types/product';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import ProductRating from './ProductRating';
+import { products } from '@/components/FeaturedProducts';
 
 interface ProductRecommendationsProps {
   currentProductId: string;
@@ -14,9 +15,6 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   currentProductId, 
   category 
 }) => {
-  // Import products from the same file that ProductDetail uses
-  const { products } = require('@/components/FeaturedProducts');
-  
   // Get products from the same category, excluding the current one
   const recommendations = products
     .filter(p => p.category === category && p.id !== currentProductId)
