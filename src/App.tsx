@@ -52,11 +52,7 @@ function App() {
                     } />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={
-                      <ProtectedRoute>
-                        <Checkout />
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/checkout" element={<Checkout />} />
                     <Route path="/order-confirmation" element={
                       <ProtectedRoute>
                         <OrderConfirmation />

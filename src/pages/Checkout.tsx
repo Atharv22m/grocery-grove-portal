@@ -9,13 +9,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
 import { useOrders } from "@/contexts/OrderContext";
-import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems } = useCart();
   const { createOrder, isLoading } = useOrders();
+  const { isSignedIn, isLoading: authLoading } = useAuth();
   
   // Form state
   const [fullName, setFullName] = useState("");
@@ -40,6 +43,11 @@ export default function Checkout() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isSignedIn) {
+      toast.error("Please sign in to complete your purchase");
+      return;
+    }
     
     if (cartItems.length === 0) {
       toast.error("Your cart is empty");
@@ -94,6 +102,36 @@ export default function Checkout() {
       toast.error("Failed to place order. Please try again.");
     }
   };
+
+  // Show login prompt if not signed in
+  if (!authLoading && !isSignedIn) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-24 pb-16">
+          <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+          
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <h2 className="text-2xl font-semibold mb-4">Please Sign In to Continue</h2>
+            <p className="text-gray-600 mb-8">You need to be signed in to complete your purchase.</p>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+              <Link to="/auth">
+                <Button className="bg-primary hover:bg-primary-hover px-6">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/cart">
+                <Button variant="outline" className="px-6">
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Return to Cart
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gray-50">

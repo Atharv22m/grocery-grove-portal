@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { products } from '@/components/FeaturedProducts';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, ImageOff } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { toast } from 'sonner';
@@ -16,16 +16,19 @@ import { Navbar } from '@/components/Navbar';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<ProductType | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const foundProduct = products.find(p => p.id === id);
     if (foundProduct) {
       setProduct(foundProduct);
       setQuantity(1); // Reset quantity when product changes
+      setImageError(false); // Reset image error state
     }
   }, [id]);
 
@@ -71,11 +74,19 @@ const ProductDetail: React.FC = () => {
         
         <div className="grid md:grid-cols-2 gap-8 mb-8">
           <Card className="p-6 flex justify-center items-center bg-white">
-            <img 
-              src={product?.image} 
-              alt={product?.name} 
-              className="max-h-96 object-contain"
-            />
+            {imageError ? (
+              <div className="flex flex-col items-center justify-center text-gray-400 h-96 w-full">
+                <ImageOff size={64} />
+                <p className="text-sm mt-4">Image not available</p>
+              </div>
+            ) : (
+              <img 
+                src={product?.image} 
+                alt={product?.name} 
+                className="max-h-96 object-contain"
+                onError={() => setImageError(true)}
+              />
+            )}
           </Card>
           
           <div>
