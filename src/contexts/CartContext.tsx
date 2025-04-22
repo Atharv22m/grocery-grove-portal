@@ -2,21 +2,30 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { CartItem, CartContextType } from "@/types/cart";
 import { fetchCartItems, addItemToCart, removeItemFromCart, updateItemQuantity, clearAllCartItems } from "@/services/CartService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { user, isSignedIn } = useAuth();
 
   useEffect(() => {
     const loadCartItems = async () => {
-      const items = await fetchCartItems();
-      setCartItems(items);
+      setIsLoading(true);
+      try {
+        const items = await fetchCartItems();
+        setCartItems(items);
+      } catch (error) {
+        console.error("Error loading cart items:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     loadCartItems();
-  }, []);
+  }, [isSignedIn, user]);
 
   const addToCart = async (productId: string, quantity: number = 1) => {
     try {
@@ -24,9 +33,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await addItemToCart(productId, quantity);
       const updatedCart = await fetchCartItems();
       setCartItems(updatedCart);
+      toast.success("Item added to cart");
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      throw error;
+      toast.error("Failed to add item to cart");
     } finally {
       setIsLoading(false);
     }

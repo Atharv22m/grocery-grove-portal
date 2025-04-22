@@ -37,7 +37,8 @@ export const fetchCartItems = async (): Promise<CartItem[]> => {
       product: {
         name: item.products.name,
         price: item.products.price,
-        image: item.products.image_url || 'https://placehold.co/200x200?text=Product'
+        image: item.products.image_url || 'https://placehold.co/200x200?text=Product',
+        unit: item.products?.unit
       }
     }));
   } catch (error: any) {
@@ -83,18 +84,31 @@ export const addItemToCart = async (productId: string, quantity: number = 1): Pr
     return;
   }
 
-  const { error } = await supabase
+  const { data: existingItem } = await supabase
     .from("cart_items")
-    .upsert({
-      user_id: user.id,
-      product_id: productId,
-      quantity: quantity
-    }, {
-      onConflict: 'user_id,product_id',
-      ignoreDuplicates: false
-    });
-
-  if (error) throw error;
+    .select("id, quantity")
+    .eq("user_id", user.id)
+    .eq("product_id", productId)
+    .single();
+  
+  if (existingItem) {
+    const { error } = await supabase
+      .from("cart_items")
+      .update({ quantity: existingItem.quantity + quantity })
+      .eq("id", existingItem.id);
+    
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("cart_items")
+      .insert({
+        user_id: user.id,
+        product_id: productId,
+        quantity: quantity
+      });
+    
+    if (error) throw error;
+  }
 };
 
 export const removeItemFromCart = async (cartItemId: string): Promise<void> => {

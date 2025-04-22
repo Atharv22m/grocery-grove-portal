@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Update authentication state when user or session changes
     setIsAuthenticated(!!user && !!session);
+    console.log("Auth state updated:", { hasUser: !!user, hasSession: !!session });
   }, [user, session]);
   
   return (
