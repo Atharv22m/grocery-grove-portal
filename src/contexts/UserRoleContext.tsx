@@ -47,8 +47,8 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Hardcoded roles for this simplified version
-  const isAdmin = user?.primaryEmailAddress?.emailAddress === "admin@example.com"; // Simple check for admin
-  const isSeller = user?.primaryEmailAddress?.emailAddress?.includes("seller");    // Simple check for seller
+  const isAdmin = user?.email === "admin@example.com"; // Simple check for admin
+  const isSeller = user?.email?.includes("seller");    // Simple check for seller
   const isCustomer = user !== null && !isAdmin && !isSeller; // Everyone else is a customer
 
   // Simplified fetch user role data function
