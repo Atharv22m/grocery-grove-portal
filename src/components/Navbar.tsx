@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { UserButton } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 
 export const Navbar: React.FC = () => {
@@ -94,12 +93,12 @@ export const Navbar: React.FC = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 hover:bg-gray-100">
-                    {user?.primaryEmailAddress?.emailAddress ? (
+                    {user?.email ? (
                       <span className="max-w-[120px] truncate">
-                        {user.primaryEmailAddress.emailAddress.split('@')[0]}
+                        {user.email.split('@')[0]}
                       </span>
                     ) : (
-                      <UserButton afterSignOutUrl="/" />
+                      <User className="h-4 w-4" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
