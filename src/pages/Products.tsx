@@ -10,6 +10,7 @@ import { products } from "@/components/FeaturedProducts";
 import { toast } from "sonner";
 import { categories } from "@/components/Categories";
 import { Input } from "@/components/ui/input";
+import { Footer } from "@/components/Footer";
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,8 +23,21 @@ export default function Products() {
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState(searchParam || "");
+  const [animateProducts, setAnimateProducts] = useState(false);
+  
+  // Animation timing effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimateProducts(true);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
+    // Reset animation state when products change
+    setAnimateProducts(false);
+    
     let result = [...products];
     
     if (searchParam) {
@@ -46,6 +60,13 @@ export default function Products() {
     }
     
     setFilteredProducts(result);
+    
+    // Re-trigger animation after a short delay
+    const timer = setTimeout(() => {
+      setAnimateProducts(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [categoryParam, searchParam]);
 
   const handleAddToCart = async (productId: string) => {
@@ -84,28 +105,31 @@ export default function Products() {
     <div className="min-h-screen bg-white">
       <Navbar />
       <div className="container mx-auto px-4 pt-24 pb-12">
-        <h1 className="text-3xl font-bold mb-6">Products</h1>
+        <h1 className="text-3xl font-bold mb-6 animate-fade-in">Products</h1>
         
-        <form onSubmit={handleSearch} className="mb-6 flex gap-2">
+        <form onSubmit={handleSearch} className="mb-6 flex gap-2 animate-fade-in" style={{animationDelay: "200ms"}}>
           <div className="relative flex-1">
             <Input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2"
+              className="w-full pl-10 pr-4 py-2 transition-all duration-300 focus:ring-2 focus:ring-primary/30"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
           </div>
-          <Button type="submit" className="bg-primary hover:bg-primary-hover">
+          <Button 
+            type="submit" 
+            className="bg-primary hover:bg-primary-hover transition-all duration-300 transform hover:scale-105"
+          >
             Search
           </Button>
         </form>
         
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-8 animate-fade-in" style={{animationDelay: "400ms"}}>
           <Button 
             variant={activeCategory === "All Products" ? "default" : "outline"}
-            className={`${activeCategory === "All Products" ? "bg-primary" : ""}`}
+            className={`${activeCategory === "All Products" ? "bg-primary" : ""} transition-all duration-300 transform hover:scale-105`}
             onClick={() => {
               setActiveCategory("All Products");
               const newParams = new URLSearchParams(searchParams);
@@ -117,11 +141,11 @@ export default function Products() {
             All Products
           </Button>
           
-          {categories.map(category => (
+          {categories.map((category, index) => (
             <Button 
               key={category.name}
               variant={activeCategory === category.name ? "default" : "outline"}
-              className={`${activeCategory === category.name ? "bg-primary" : ""}`}
+              className={`${activeCategory === category.name ? "bg-primary" : ""} transition-all duration-300 transform hover:scale-105`}
               onClick={() => {
                 setActiveCategory(category.name);
                 const newParams = new URLSearchParams(searchParams);
@@ -137,25 +161,30 @@ export default function Products() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProducts.map(product => (
+          {filteredProducts.map((product, index) => (
             <div 
               key={product.id}
-              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow relative"
+              className={`bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-all duration-500 relative transform ${
+                animateProducts 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: `${index * 50}ms` }}
             >
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 z-10 hover:bg-gray-100"
+                className="absolute top-2 right-2 z-10 hover:bg-gray-100 transition-colors duration-300"
                 onClick={() => toggleWishlist(product.id)}
               >
                 <Heart 
                   size={20} 
-                  className={isInWishlist(product.id) ? "text-red-500" : "text-gray-400"} 
+                  className={`transition-colors duration-300 ${isInWishlist(product.id) ? "text-red-500" : "text-gray-400"}`} 
                   fill={isInWishlist(product.id) ? "currentColor" : "none"} 
                 />
               </Button>
-              <Link to={`/product/${product.id}`} className="block mb-4">
-                <div className="mb-4 flex justify-center h-40">
+              <Link to={`/product/${product.id}`} className="block mb-4 group">
+                <div className="mb-4 flex justify-center h-40 overflow-hidden">
                   {imageErrors[product.id] ? (
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <ImageOff size={32} />
@@ -165,36 +194,43 @@ export default function Products() {
                     <img 
                       src={product.image} 
                       alt={product.name} 
-                      className="object-contain h-full w-full rounded-md"
+                      className="object-contain h-full w-full rounded-md transition-transform duration-500 group-hover:scale-110"
                       onError={() => handleImageError(product.id)}
                     />
                   )}
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary transition-colors duration-300">{product.name}</h3>
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-lg font-bold text-primary">₹{product.price}</span>
                   <span className="text-sm text-gray-500">per {product.unit}</span>
                 </div>
               </Link>
               <Button 
-                className="w-full bg-primary hover:bg-primary-hover"
+                className="w-full bg-primary hover:bg-primary-hover transition-all duration-300 transform hover:scale-105 hover:shadow-md"
                 onClick={() => handleAddToCart(product.id)}
                 disabled={loadingProductId === product.id}
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
-                {loadingProductId === product.id ? "Adding..." : "Add to Cart"}
+                {loadingProductId === product.id ? (
+                  <>
+                    <span className="animate-pulse">Adding</span>
+                    <span className="inline-block animate-bounce">.</span>
+                    <span className="inline-block animate-bounce" style={{animationDelay: "200ms"}}>.</span>
+                    <span className="inline-block animate-bounce" style={{animationDelay: "400ms"}}>.</span>
+                  </>
+                ) : "Add to Cart"}
               </Button>
             </div>
           ))}
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 animate-fade-in">
             <p className="text-gray-500">No products found.</p>
             {searchParam && (
               <Button 
                 variant="outline" 
-                className="mt-4"
+                className="mt-4 transition-all duration-300 transform hover:scale-105"
                 onClick={() => {
                   const newParams = new URLSearchParams(searchParams);
                   newParams.delete("search");
@@ -208,6 +244,7 @@ export default function Products() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }
