@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,7 @@ const Profile = () => {
 
   const fetchProfileData = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -81,7 +83,20 @@ const Profile = () => {
       
       setUser(user);
       
-      const profileData = await ProfileService.getProfile(user.id);
+      let profileData = await ProfileService.getProfile(user.id);
+      
+      if (!profileData) {
+        await ProfileService.updateProfile({
+          id: user.id,
+          full_name: '',
+          phone_number: '',
+          address: '',
+          bio: '',
+          updated_at: new Date().toISOString(),
+        });
+        
+        profileData = await ProfileService.getProfile(user.id);
+      }
         
       if (profileData) {
         setProfile(profileData);
@@ -98,6 +113,7 @@ const Profile = () => {
       fetchOrders();
     } catch (error) {
       console.error("Failed to fetch user data:", error);
+      toast.error("Failed to load profile data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -175,9 +191,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <main className="container mx-auto px-4 pt-24 pb-16">
+      <main className="container mx-auto px-4 pt-24 pb-16 flex-grow">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">My Account</h1>
@@ -538,6 +554,7 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <Footer />
     </div>
   );
 };

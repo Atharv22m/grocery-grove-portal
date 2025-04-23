@@ -48,66 +48,71 @@ export const fetchCartItems = async (): Promise<CartItem[]> => {
 };
 
 export const addItemToCart = async (productId: string, quantity: number = 1): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    const localCart = localStorage.getItem('cart');
-    let cartItems: CartItem[] = localCart ? JSON.parse(localCart) : [];
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
     
-    const productToAdd = products.find(p => p.id === productId);
-    
-    if (!productToAdd) {
-      throw new Error("Product not found");
-    }
-    
-    const newItem: CartItem = {
-      id: `local-${Date.now()}`,
-      product_id: productId,
-      quantity: quantity,
-      product: {
-        name: productToAdd.name,
-        price: productToAdd.price,
-        image: productToAdd.image,
-        unit: productToAdd.unit
+    if (!user) {
+      const localCart = localStorage.getItem('cart');
+      let cartItems: CartItem[] = localCart ? JSON.parse(localCart) : [];
+      
+      const productToAdd = products.find(p => p.id === productId);
+      
+      if (!productToAdd) {
+        throw new Error("Product not found");
       }
-    };
-    
-    const existingItemIndex = cartItems.findIndex(item => item.product_id === productId);
-    
-    if (existingItemIndex >= 0) {
-      cartItems[existingItemIndex].quantity += quantity;
-    } else {
-      cartItems.push(newItem);
-    }
-    
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-    return;
-  }
-
-  const { data: existingItem } = await supabase
-    .from("cart_items")
-    .select("id, quantity")
-    .eq("user_id", user.id)
-    .eq("product_id", productId)
-    .single();
-  
-  if (existingItem) {
-    const { error } = await supabase
-      .from("cart_items")
-      .update({ quantity: existingItem.quantity + quantity })
-      .eq("id", existingItem.id);
-    
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from("cart_items")
-      .insert({
-        user_id: user.id,
+      
+      const newItem: CartItem = {
+        id: `local-${Date.now()}`,
         product_id: productId,
-        quantity: quantity
-      });
+        quantity: quantity,
+        product: {
+          name: productToAdd.name,
+          price: productToAdd.price,
+          image: productToAdd.image,
+          unit: productToAdd.unit
+        }
+      };
+      
+      const existingItemIndex = cartItems.findIndex(item => item.product_id === productId);
+      
+      if (existingItemIndex >= 0) {
+        cartItems[existingItemIndex].quantity += quantity;
+      } else {
+        cartItems.push(newItem);
+      }
+      
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+      return;
+    }
+
+    const { data: existingItem } = await supabase
+      .from("cart_items")
+      .select("id, quantity")
+      .eq("user_id", user.id)
+      .eq("product_id", productId)
+      .single();
     
-    if (error) throw error;
+    if (existingItem) {
+      const { error } = await supabase
+        .from("cart_items")
+        .update({ quantity: existingItem.quantity + quantity })
+        .eq("id", existingItem.id);
+      
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("cart_items")
+        .insert({
+          user_id: user.id,
+          product_id: productId,
+          quantity: quantity
+        });
+      
+      if (error) throw error;
+    }
+  } catch (error: any) {
+    console.error("Error adding item to cart:", error);
+    throw error;
   }
 };
 
