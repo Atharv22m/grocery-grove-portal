@@ -9,19 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 // Schema for login form
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 // Schema for signup form with password confirmation
 const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Name must be at least 2 characters"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -36,8 +37,6 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { isLoaded: signInLoaded, signIn } = useSignIn();
-  const { isLoaded: signUpLoaded, signUp } = useSignUp();
 
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -61,27 +60,22 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
 
   // Handle login submission
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
-    if (!signInLoaded) {
-      toast.error("Authentication service is not ready yet");
-      return;
-    }
-
     try {
       setIsLoading(true);
       
-      // Use Clerk for authentication
-      const result = await signIn.create({
-        identifier: values.email,
+      // Use Supabase for authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
         password: values.password,
       });
 
-      if (result.status === "complete") {
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
         toast.success("Logged in successfully!");
         navigate("/");
-      } else {
-        // Handle verification or other flows if needed
-        console.log("Additional verification needed:", result);
-        toast.info("Please complete the verification process");
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -93,29 +87,32 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
 
   // Handle signup submission
   const onSignupSubmit = async (values: z.infer<typeof signupSchema>) => {
-    if (!signUpLoaded) {
-      toast.error("Authentication service is not ready yet");
-      return;
-    }
-
     try {
       setIsLoading(true);
       
-      // Use Clerk for registration
-      const result = await signUp.create({
-        emailAddress: values.email,
+      // Use Supabase for registration
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
         password: values.password,
-        firstName: values.fullName.split(' ')[0],
-        lastName: values.fullName.split(' ').slice(1).join(' ') || '',
+        options: {
+          data: {
+            full_name: values.fullName,
+          }
+        }
       });
 
-      if (result.status === "complete") {
-        toast.success("Account created successfully!");
-        navigate("/");
-      } else {
-        // Handle email verification or other flows
-        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-        toast.success("Account created! Please check your email to verify your account.");
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        if (data.session) {
+          toast.success("Account created successfully!");
+          navigate("/");
+        } else {
+          // Handle email confirmation flow
+          toast.success("Account created! Please check your email to verify your account.");
+        }
       }
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -126,11 +123,15 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
   };
 
   const activeForm = isSignUp ? signupForm : loginForm;
-  const activeSchema = isSignUp ? signupSchema : loginSchema;
   const onSubmit = isSignUp ? onSignupSubmit : onLoginSubmit;
 
   return (
-    <div className="w-full">
+    <motion.div 
+      className="w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <Form {...activeForm}>
         <form onSubmit={activeForm.handleSubmit(onSubmit)} className="space-y-4">
           {isSignUp && (
@@ -141,7 +142,11 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      className="form-field-focus"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,7 +161,12 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="your@email.com" type="email" {...field} />
+                  <Input 
+                    placeholder="your@email.com" 
+                    type="email" 
+                    {...field}
+                    className="form-field-focus"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -175,6 +185,7 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       {...field}
+                      className="form-field-focus"
                     />
                     <Button
                       type="button"
@@ -209,6 +220,7 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         {...field}
+                        className="form-field-focus"
                       />
                     </div>
                   </FormControl>
@@ -218,22 +230,24 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
             />
           )}
           
-          <Button
-            type="submit"
-            className="w-full bg-primary hover:bg-primary-hover"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isSignUp ? "Creating account..." : "Signing in..."}
-              </>
-            ) : (
-              isSignUp ? "Create Account" : "Sign In"
-            )}
-          </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              type="submit"
+              className="w-full bg-primary hover:bg-primary-hover"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isSignUp ? "Creating account..." : "Signing in..."}
+                </>
+              ) : (
+                isSignUp ? "Create Account" : "Sign In"
+              )}
+            </Button>
+          </motion.div>
         </form>
       </Form>
-    </div>
+    </motion.div>
   );
 };

@@ -1,9 +1,12 @@
 
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { useUser, useAuth as useClerkAuth, useSession } from "@clerk/clerk-react";
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextProps {
-  user: any;
+  user: User | null;
+  session: Session | null;
   isLoading: boolean;
   isSignedIn: boolean;
   signOut: () => Promise<void>;
@@ -11,6 +14,7 @@ interface AuthContextProps {
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
+  session: null,
   isLoading: true,
   isSignedIn: false,
   signOut: async () => {},
@@ -19,23 +23,53 @@ const AuthContext = createContext<AuthContextProps>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerkAuth();
-  const { session } = useSession();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
   
   useEffect(() => {
-    // Update authentication state when user or session changes
-    setIsAuthenticated(!!user && !!session);
-    console.log("Auth state updated:", { hasUser: !!user, hasSession: !!session });
-  }, [user, session]);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log("Auth state changed:", event);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsSignedIn(!!currentSession?.user);
+        
+        if (event === 'SIGNED_IN') {
+          toast.success("Signed in successfully!");
+        } else if (event === 'SIGNED_OUT') {
+          toast.info("Signed out");
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Current session:", currentSession ? "exists" : "none");
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setIsSignedIn(!!currentSession?.user);
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+  
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
   
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading: !isLoaded,
-        isSignedIn: isAuthenticated,
+        session,
+        isLoading,
+        isSignedIn,
         signOut,
       }}
     >
