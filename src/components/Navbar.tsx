@@ -102,9 +102,12 @@ export const Navbar: React.FC = () => {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 bg-white">
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     My Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/orders")}>
+                    Your Orders
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
@@ -221,6 +224,14 @@ export const Navbar: React.FC = () => {
                   >
                     <User className="inline mr-2 h-4 w-4" />
                     My Account
+                  </Link>
+                  <Link 
+                    to="/orders" 
+                    className="text-gray-700 hover:text-primary transition-colors nav-item"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <ShoppingCart className="inline mr-2 h-4 w-4" />
+                    Your Orders
                   </Link>
                   <Button 
                     variant="outline"

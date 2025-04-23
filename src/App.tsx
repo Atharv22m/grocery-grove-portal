@@ -11,6 +11,7 @@ import Checkout from "@/pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
 import Orders from "@/pages/Orders";
 import OrderDetail from "@/pages/OrderDetail";
+import BuyNow from "@/pages/BuyNow";
 import Wishlist from "@/pages/Wishlist";
 import NotFound from "@/pages/NotFound";
 import { Toaster } from "sonner";
@@ -53,6 +54,11 @@ function App() {
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/buy-now" element={
+                      <ProtectedRoute>
+                        <BuyNow />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/order-confirmation" element={
                       <ProtectedRoute>
                         <OrderConfirmation />

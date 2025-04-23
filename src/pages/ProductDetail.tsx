@@ -58,6 +58,14 @@ const ProductDetail: React.FC = () => {
     }
   };
 
+  const handleBuyNow = () => {
+    if (product) {
+      navigate('/buy-now', {
+        state: { product, quantity }
+      });
+    }
+  };
+
   const handleToggleWishlist = async () => {
     if (product) {
       await toggleWishlist(product.id);
@@ -86,9 +94,9 @@ const ProductDetail: React.FC = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
-      <div className="container mx-auto py-12 px-4 pt-24">
+      <div className="container mx-auto py-12 px-4 pt-24 flex-grow">
         {/* Breadcrumb navigation could go here */}
         
         <div 
@@ -203,6 +211,16 @@ const ProductDetail: React.FC = () => {
                   fill={isInWishlist(product.id) ? "currentColor" : "none"} 
                 />
                 {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+              </Button>
+            </div>
+            
+            <div className="mt-4">
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                onClick={handleBuyNow}
+                disabled={product?.stock === 0}
+              >
+                Buy Now
               </Button>
             </div>
           </div>
