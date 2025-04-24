@@ -60,12 +60,15 @@ const ProductDetail: React.FC = () => {
         <ProductDetails product={product} />
         
         <div className="mt-12">
-          <ProductRating productId={product.id} />
+          <ProductRating rating={product.rating} />
         </div>
         
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
-          <ProductRecommendations currentProductId={product.id} />
+          <ProductRecommendations 
+            currentProductId={product.id} 
+            category={product.category} 
+          />
         </div>
       </div>
       <Footer />

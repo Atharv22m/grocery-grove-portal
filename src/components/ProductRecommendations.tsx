@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ProductType } from '@/types/product';
 import { Card, CardContent } from '@/components/ui/card';
@@ -5,14 +6,20 @@ import { Link } from 'react-router-dom';
 import ProductRating from './ProductRating';
 import { products } from '@/components/FeaturedProducts';
 
+interface ProductRecommendationsProps {
+  currentProductId: string;
+  category?: string;
+}
+
 const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({ 
   currentProductId, 
   category 
 }) => {
   // Get products from the same category, excluding the current one
-  const recommendations = products
-    .filter(p => p.category === category && p.id !== currentProductId)
-    .slice(0, 4);
+  // If category is not provided, show random recommendations
+  const recommendations = category 
+    ? products.filter(p => p.category === category && p.id !== currentProductId).slice(0, 4)
+    : products.filter(p => p.id !== currentProductId).slice(0, 4);
   
   if (recommendations.length === 0) return null;
   
@@ -47,8 +54,3 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
 };
 
 export default ProductRecommendations;
-
-interface ProductRecommendationsProps {
-  currentProductId: string;
-  category: string;
-}
