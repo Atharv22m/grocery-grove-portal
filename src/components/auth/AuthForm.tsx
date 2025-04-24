@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -63,7 +62,6 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
     try {
       setIsLoading(true);
       
-      // Use Supabase for authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -116,7 +114,11 @@ export const AuthForm = ({ isSignUp = false }: AuthFormProps) => {
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error(error.message || "Failed to create account. Please try again.");
+      if (error.message.includes("unique")) {
+        toast.error("This email is already registered. Please try logging in.");
+      } else {
+        toast.error(error.message || "Failed to create account. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
