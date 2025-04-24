@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ImageOff, ArrowUp, ArrowDown } from "lucide-react";
+import { ShoppingCart, ImageOff, ArrowUp, ArrowDown, CreditCard } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PRODUCT_IMAGES } from "@/utils/imageConstants";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const products = [
   {
@@ -108,6 +109,8 @@ export const products = [
 
 export const FeaturedProducts = () => {
   const { addToCart } = useCart();
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
@@ -124,6 +127,15 @@ export const FeaturedProducts = () => {
     } finally {
       setLoadingProductId(null);
     }
+  };
+
+  const handleBuyNow = (product: typeof products[0]) => {
+    if (!isSignedIn) {
+      toast.error("Please sign in to continue with purchase");
+      navigate("/auth");
+      return;
+    }
+    navigate("/buy-now", { state: { product, quantity: 1 } });
   };
 
   const handleImageError = (productId: string) => {
@@ -195,14 +207,24 @@ export const FeaturedProducts = () => {
                   <span className="text-sm text-gray-500">per {product.unit}</span>
                 </div>
               </Link>
-              <Button 
-                className="w-full bg-primary hover:bg-primary-hover"
-                onClick={() => handleAddToCart(product.id)}
-                disabled={loadingProductId === product.id}
-              >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                {loadingProductId === product.id ? "Adding..." : "Add to Cart"}
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  className="w-full bg-primary hover:bg-primary-hover"
+                  onClick={() => handleAddToCart(product.id)}
+                  disabled={loadingProductId === product.id}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  {loadingProductId === product.id ? "Adding..." : "Add to Cart"}
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleBuyNow(product)}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Buy Now
+                </Button>
+              </div>
             </div>
           ))}
         </div>

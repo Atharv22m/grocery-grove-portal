@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ImageOff, Search, Heart } from "lucide-react";
+import { ShoppingCart, ImageOff, Search, Heart, CreditCard } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { products } from "@/components/FeaturedProducts";
@@ -11,6 +10,7 @@ import { toast } from "sonner";
 import { categories } from "@/components/Categories";
 import { Input } from "@/components/ui/input";
 import { Footer } from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,11 +19,13 @@ export default function Products() {
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [activeCategory, setActiveCategory] = useState<string>("All Products");
   const { addToCart } = useCart();
+  const { isSignedIn } = useAuth();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState(searchParam || "");
   const [animateProducts, setAnimateProducts] = useState(false);
+  const navigate = useNavigate();
   
   // Animation timing effect
   useEffect(() => {
@@ -99,6 +101,15 @@ export default function Products() {
       newParams.delete("search");
     }
     setSearchParams(newParams);
+  };
+
+  const handleBuyNow = (product: typeof products[0]) => {
+    if (!isSignedIn) {
+      toast.error("Please sign in to continue with purchase");
+      navigate("/auth");
+      return;
+    }
+    navigate("/buy-now", { state: { product, quantity: 1 } });
   };
 
   return (
@@ -205,21 +216,31 @@ export default function Products() {
                   <span className="text-sm text-gray-500">per {product.unit}</span>
                 </div>
               </Link>
-              <Button 
-                className="w-full bg-primary hover:bg-primary-hover transition-all duration-300 transform hover:scale-105 hover:shadow-md"
-                onClick={() => handleAddToCart(product.id)}
-                disabled={loadingProductId === product.id}
-              >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                {loadingProductId === product.id ? (
-                  <>
-                    <span className="animate-pulse">Adding</span>
-                    <span className="inline-block animate-bounce">.</span>
-                    <span className="inline-block animate-bounce" style={{animationDelay: "200ms"}}>.</span>
-                    <span className="inline-block animate-bounce" style={{animationDelay: "400ms"}}>.</span>
-                  </>
-                ) : "Add to Cart"}
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  className="w-full bg-primary hover:bg-primary-hover transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+                  onClick={() => handleAddToCart(product.id)}
+                  disabled={loadingProductId === product.id}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  {loadingProductId === product.id ? (
+                    <>
+                      <span className="animate-pulse">Adding</span>
+                      <span className="inline-block animate-bounce">.</span>
+                      <span className="inline-block animate-bounce" style={{animationDelay: "200ms"}}>.</span>
+                      <span className="inline-block animate-bounce" style={{animationDelay: "400ms"}}>.</span>
+                    </>
+                  ) : "Add to Cart"}
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full transition-all duration-300 transform hover:scale-105"
+                  onClick={() => handleBuyNow(product)}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Buy Now
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -247,4 +268,4 @@ export default function Products() {
       <Footer />
     </div>
   );
-}
+};
