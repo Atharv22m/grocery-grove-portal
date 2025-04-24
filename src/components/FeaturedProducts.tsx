@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ImageOff, ArrowUp, ArrowDown, CreditCard } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -105,6 +106,53 @@ export const products = [
     weight: "500g",
     discount: 5
   },
+  {
+    id: "9",
+    name: "Organic Brown Sugar",
+    description: "Natural sugar with rich molasses flavor",
+    price: 85,
+    unit: "500g",
+    image: "https://placehold.co/400x300?text=Brown+Sugar",
+    category: "Essentials",
+    rating: 4.3,
+    stock: 28,
+    weight: "500g"
+  },
+  {
+    id: "10",
+    name: "Fresh Farm Eggs",
+    description: "Free-range eggs from healthy hens",
+    price: 75,
+    unit: "dozen",
+    image: "https://placehold.co/400x300?text=Farm+Eggs",
+    category: "Dairy & Eggs",
+    rating: 4.7,
+    stock: 40
+  },
+  {
+    id: "11",
+    name: "Amul Butter",
+    description: "Creamy and delicious table butter",
+    price: 55,
+    unit: "100g",
+    image: "https://placehold.co/400x300?text=Amul+Butter",
+    category: "Dairy & Eggs",
+    rating: 4.8,
+    stock: 35,
+    weight: "100g"
+  },
+  {
+    id: "12",
+    name: "Organic Honey",
+    description: "Pure natural honey with no additives",
+    price: 299,
+    unit: "500g",
+    image: "https://placehold.co/400x300?text=Organic+Honey",
+    category: "Essentials",
+    rating: 4.9,
+    stock: 15,
+    weight: "500g"
+  }
 ];
 
 export const FeaturedProducts = () => {

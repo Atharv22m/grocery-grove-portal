@@ -60,6 +60,10 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return null;
       }
       
+      console.log("Creating order with items:", cartItems);
+      console.log("User ID:", user.id);
+      console.log("Order data:", orderData);
+      
       const order = await createOrderService(
         user.id, 
         cartItems, 
@@ -70,6 +74,10 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (order) {
         await clearCart();
         setCurrentOrder(order);
+        
+        // Add the new order to the orders list
+        setOrders(prevOrders => [order, ...prevOrders]);
+        
         toast.success("Order placed successfully!");
         return order;
       } else {
@@ -88,10 +96,16 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getOrderById = async (orderId: string) => {
     try {
       setIsLoading(true);
+      console.log("Fetching order by ID:", orderId);
       const order = await getOrderByIdService(orderId);
+      
       if (order) {
+        console.log("Found order:", order);
         setCurrentOrder(order);
+      } else {
+        console.log("No order found with ID:", orderId);
       }
+      
       return order;
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -109,10 +123,14 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log("No authenticated user found");
         return [];
       }
       
+      console.log("Fetching orders for user ID:", user.id);
       const userOrders = await getUserOrdersService(user.id);
+      console.log("Fetched orders:", userOrders);
+      
       setOrders(userOrders);
       return userOrders;
     } catch (error) {
@@ -204,7 +222,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createOrder, 
         getOrderById, 
         getUserOrders,
-        fetchOrders, // Add the new method to the context
+        fetchOrders, 
         updateOrderStatus,
         cancelOrder
       }}

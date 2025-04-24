@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer"; 
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ImageOff, Search, Heart, CreditCard } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -9,7 +10,6 @@ import { products } from "@/components/FeaturedProducts";
 import { toast } from "sonner";
 import { categories } from "@/components/Categories";
 import { Input } from "@/components/ui/input";
-import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Products() {
@@ -27,7 +27,6 @@ export default function Products() {
   const [animateProducts, setAnimateProducts] = useState(false);
   const navigate = useNavigate();
   
-  // Animation timing effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimateProducts(true);
@@ -37,7 +36,6 @@ export default function Products() {
   }, []);
 
   useEffect(() => {
-    // Reset animation state when products change
     setAnimateProducts(false);
     
     let result = [...products];
@@ -63,7 +61,6 @@ export default function Products() {
     
     setFilteredProducts(result);
     
-    // Re-trigger animation after a short delay
     const timer = setTimeout(() => {
       setAnimateProducts(true);
     }, 100);
@@ -113,9 +110,9 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 pt-24 pb-12">
+      <div className="container mx-auto px-4 pt-24 pb-12 flex-grow">
         <h1 className="text-3xl font-bold mb-6 animate-fade-in">Products</h1>
         
         <form onSubmit={handleSearch} className="mb-6 flex gap-2 animate-fade-in" style={{animationDelay: "200ms"}}>

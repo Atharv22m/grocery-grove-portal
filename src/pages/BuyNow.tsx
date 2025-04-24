@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ProductType } from "@/types/product";
 import { useOrders } from "@/contexts/OrderContext";
 import { toast } from "sonner";
-import { ShoppingCart, CreditCard } from "lucide-react";
+import { ShoppingCart, CreditCard, CheckCircle } from "lucide-react";
 
 const BuyNow = () => {
   const location = useLocation();
@@ -18,6 +18,8 @@ const BuyNow = () => {
   const [product, setProduct] = useState<ProductType | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
   
   const [deliveryInfo, setDeliveryInfo] = useState({
     fullName: "",
@@ -80,20 +82,8 @@ const BuyNow = () => {
       });
       
       if (order) {
-        navigate("/order-confirmation", { 
-          state: { 
-            orderDetails: {
-              items: orderItems,
-              delivery: deliveryInfo,
-              payment: {
-                method: paymentMethod,
-                total: total
-              },
-              orderNumber: order.id,
-              orderDate: order.created_at
-            }
-          }
-        });
+        setOrderPlaced(true);
+        setOrderNumber(order.id.slice(0, 8).toUpperCase());
       }
     } catch (error) {
       console.error("Error placing order:", error);
@@ -102,6 +92,48 @@ const BuyNow = () => {
       setIsLoading(false);
     }
   };
+
+  const handleContinueShopping = () => {
+    navigate('/products');
+  };
+
+  const handleViewOrders = () => {
+    navigate('/orders');
+  };
+
+  if (orderPlaced) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Navbar />
+        <div className="flex-grow container mx-auto py-12 px-4 pt-24">
+          <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm">
+            <div className="flex justify-center mb-6">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-center mb-2">Order Placed Successfully!</h2>
+            <p className="text-gray-600 text-center mb-6">Your order #{orderNumber} has been placed</p>
+            
+            <div className="space-y-4">
+              <Button 
+                onClick={handleContinueShopping}
+                className="w-full bg-primary hover:bg-primary-hover"
+              >
+                Continue Shopping
+              </Button>
+              <Button 
+                onClick={handleViewOrders}
+                variant="outline"
+                className="w-full"
+              >
+                View My Orders
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -258,7 +290,7 @@ const BuyNow = () => {
                         className="mr-2"
                       />
                       <label htmlFor="cod" className="flex items-center">
-                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        <ShoppingCart className="mr-2 h-4 w-4" />
                         Cash on Delivery
                       </label>
                     </div>
@@ -273,7 +305,7 @@ const BuyNow = () => {
                         className="mr-2"
                       />
                       <label htmlFor="card" className="flex items-center">
-                        <CreditCard className="h-4 w-4 mr-2" />
+                        <CreditCard className="mr-2 h-4 w-4" />
                         Credit/Debit Card
                       </label>
                     </div>

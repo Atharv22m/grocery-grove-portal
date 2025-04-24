@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,9 +107,9 @@ export default function Checkout() {
   // Show login prompt if not signed in
   if (!authLoading && !isSignedIn) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
-        <div className="container mx-auto px-4 pt-24 pb-16">
+        <div className="container mx-auto px-4 pt-24 pb-16 flex-grow">
           <h1 className="text-3xl font-bold mb-8">Checkout</h1>
           
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
@@ -129,14 +130,15 @@ export default function Checkout() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 pt-24 pb-16">
+      <div className="container mx-auto px-4 pt-24 pb-16 flex-grow">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
         
         {cartItems.length === 0 ? (
@@ -325,6 +327,7 @@ export default function Checkout() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

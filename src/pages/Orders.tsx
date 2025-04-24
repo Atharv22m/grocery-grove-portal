@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { useOrders } from "@/contexts/OrderContext";
 import { OrderStatusDisplay, OrderStatusBadge } from "@/components/OrderStatus";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,9 @@ export default function Orders() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 pt-24 pb-16">
+      <div className="container mx-auto px-4 pt-24 pb-16 flex-grow">
         <Button 
           variant="ghost" 
           className="mb-6" 
@@ -146,6 +147,7 @@ export default function Orders() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }
