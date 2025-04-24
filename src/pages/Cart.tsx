@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Trash2, ShoppingCart, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const Cart: React.FC = () => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
