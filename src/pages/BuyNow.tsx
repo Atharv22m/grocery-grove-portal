@@ -60,6 +60,7 @@ const BuyNow = () => {
     
     try {
       setIsLoading(true);
+      toast.loading("Processing your order...");
       
       // Create cart-like items array for a single product
       const orderItems = [{
@@ -82,12 +83,16 @@ const BuyNow = () => {
       });
       
       if (order) {
+        toast.dismiss();
+        toast.success("🎉 Yay! Your order has been placed successfully!", {
+          duration: 4000,
+        });
         setOrderPlaced(true);
         setOrderNumber(order.id.slice(0, 8).toUpperCase());
       }
     } catch (error) {
       console.error("Error placing order:", error);
-      toast.error("Failed to place order");
+      toast.error("Failed to place order. Please try again.");
     } finally {
       setIsLoading(false);
     }

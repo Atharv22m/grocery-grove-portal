@@ -21,10 +21,12 @@ const Cart: React.FC = () => {
 
   const handleCheckout = () => {
     if (!isSignedIn) {
+      toast.error("Please sign in to checkout");
       navigate('/auth');
       return;
     }
     
+    toast.loading("Processing your order...");
     navigate('/checkout');
   };
 

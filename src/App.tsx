@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
@@ -37,56 +36,58 @@ function App() {
               <OrderProvider>
                 <UserRoleProvider>
                   <Router>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/profile" element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/products" element={<Products />} />
-                      <Route path="/products/new" element={
-                        <ProtectedRoute>
-                          <ProductForm />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/products/edit/:id" element={
-                        <ProtectedRoute>
-                          <ProductForm />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/product/:id" element={<ProductDetail />} />
-                      <Route path="/cart" element={<Cart />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route path="/buy-now" element={
-                        <ProtectedRoute>
-                          <BuyNow />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/order-confirmation" element={
-                        <ProtectedRoute>
-                          <OrderConfirmation />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/orders" element={
-                        <ProtectedRoute>
-                          <Orders />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/order/:id" element={
-                        <ProtectedRoute>
-                          <OrderDetail />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/wishlist" element={
-                        <ProtectedRoute>
-                          <Wishlist />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toaster />
+                    <div className="min-h-screen flex flex-col">
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/profile" element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/products/new" element={
+                          <ProtectedRoute>
+                            <ProductForm />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/products/edit/:id" element={
+                          <ProtectedRoute>
+                            <ProductForm />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/product/:id" element={<ProductDetail />} />
+                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/buy-now" element={
+                          <ProtectedRoute>
+                            <BuyNow />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/order-confirmation" element={
+                          <ProtectedRoute>
+                            <OrderConfirmation />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/orders" element={
+                          <ProtectedRoute>
+                            <Orders />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/order/:id" element={
+                          <ProtectedRoute>
+                            <OrderDetail />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/wishlist" element={
+                          <ProtectedRoute>
+                            <Wishlist />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <Toaster />
+                    </div>
                   </Router>
                 </UserRoleProvider>
               </OrderProvider>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -16,10 +15,20 @@ export default function Orders() {
   const { orders, getUserOrders, isLoading, cancelOrder } = useOrders();
   const navigate = useNavigate();
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadOrders = async () => {
-      await getUserOrders();
+      try {
+        setError(null);
+        console.log("Fetching orders...");
+        const fetchedOrders = await getUserOrders();
+        console.log("Fetched orders:", fetchedOrders);
+      } catch (err) {
+        console.error("Error loading orders:", err);
+        setError("Failed to load your orders. Please try again later.");
+        toast.error("Failed to load orders");
+      }
     };
     
     loadOrders();
@@ -35,6 +44,7 @@ export default function Orders() {
         }
       } catch (error) {
         console.error("Error cancelling order:", error);
+        toast.error("Failed to cancel order");
       } finally {
         setCancellingOrderId(null);
       }
@@ -59,7 +69,21 @@ export default function Orders() {
         
         <h1 className="text-3xl font-bold mb-8">Your Orders</h1>
 
-        {isLoading ? (
+        {error ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <div className="text-red-500 mb-4">
+              <Package className="h-12 w-12 mx-auto mb-4" />
+              <p>{error}</p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              className="mt-4"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <div className="animate-pulse flex flex-col items-center">
               <div className="rounded-full bg-gray-200 h-12 w-12 mb-4"></div>
