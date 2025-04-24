@@ -1,12 +1,7 @@
-
 import React from 'react';
 import { ProductType } from '@/types/product';
 import { Card, CardContent } from '@/components/ui/card';
 import { PackageCheck, ShoppingBag, Box, Info } from 'lucide-react';
-
-interface ProductDetailsProps {
-  product: ProductType;
-}
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   return (
@@ -53,3 +48,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 };
 
 export default ProductDetails;
+
+interface ProductDetailsProps {
+  product: ProductType;
+}

@@ -1,12 +1,5 @@
-
 import React from 'react';
 import { Star, StarHalf } from 'lucide-react';
-
-interface ProductRatingProps {
-  rating: number;
-  showText?: boolean;
-  size?: number;
-}
 
 const ProductRating: React.FC<ProductRatingProps> = ({ 
   rating, 
@@ -36,3 +29,9 @@ const ProductRating: React.FC<ProductRatingProps> = ({
 };
 
 export default ProductRating;
+
+interface ProductRatingProps {
+  rating: number;
+  showText?: boolean;
+  size?: number;
+}

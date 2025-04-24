@@ -1,15 +1,9 @@
-
 import React from 'react';
 import { ProductType } from '@/types/product';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import ProductRating from './ProductRating';
 import { products } from '@/components/FeaturedProducts';
-
-interface ProductRecommendationsProps {
-  currentProductId: string;
-  category: string;
-}
 
 const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({ 
   currentProductId, 
@@ -53,3 +47,8 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
 };
 
 export default ProductRecommendations;
+
+interface ProductRecommendationsProps {
+  currentProductId: string;
+  category: string;
+}
